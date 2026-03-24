@@ -85,12 +85,13 @@ def main():
     (env_build / "JAVA_HOME").write_text(str(jdk_src))
     (env_build / "PATH.prepend").write_text(f"{jdk_src}/bin")
     (env_build / "PATH.delim").write_text(":")
-    
-
-    build_java_opts = "-Xss2m -Dfile.encoding=UTF-8"
+    build_java_opts = (
+        "-Xss2m "
+        "-Dfile.encoding=UTF-8 "
+        "-Djava.security.properties==/dev/null"
+    )
 
     (env_build / "JAVA_TOOL_OPTIONS.override").write_text(build_java_opts)
-    # --------------------------
     # ==========================================================================
     # [LAYER 2] JRE LAYER (DIRECTORY: jre/ + METADATA: jre.toml)
     # ==========================================================================
