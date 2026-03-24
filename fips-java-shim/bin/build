@@ -86,31 +86,11 @@ def main():
     (env_build / "PATH.prepend").write_text(f"{jdk_src}/bin")
     (env_build / "PATH.delim").write_text(":")
     
-    jdk_trust_dir = "jre/lib" if version == "8" else "lib"
-    jdk_trust = jdk_src / jdk_trust_dir / "security/cacerts"
-    
-    if version == "8":
-        jdk_boot = (
-            f"{jdk_src}/{jdk_trust_dir}/ext/bc-fips.jar:"
-            f"{jdk_src}/{jdk_trust_dir}/ext/bcutil-fips.jar:"
-            f"{jdk_src}/{jdk_trust_dir}/ext/bctls-fips.jar"
-        )
-    else:
-        jdk_boot = (
-            f"{jdk_src}/lib/bc-fips.jar:"
-            f"{jdk_src}/lib/bcutil-fips.jar:"
-            f"{jdk_src}/lib/bctls-fips.jar"
-        )
 
-    java_opts = (
-        f"{fips_base} "
-        f"-Djavax.net.ssl.trustStore={jdk_trust} "
-        f"-Xbootclasspath/a:{jdk_boot}"
-    )
+    build_java_opts = "-Xss2m -Dfile.encoding=UTF-8"
 
-    (env_build / "JAVA_TOOL_OPTIONS.override").write_text(java_opts)
-
-
+    (env_build / "JAVA_TOOL_OPTIONS.override").write_text(build_java_opts)
+    # --------------------------
     # ==========================================================================
     # [LAYER 2] JRE LAYER (DIRECTORY: jre/ + METADATA: jre.toml)
     # ==========================================================================
