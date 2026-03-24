@@ -1,0 +1,52 @@
+api = "0.11"
+
+
+[[stacks]]
+  id = "*"
+
+
+[metadata]
+  [[metadata.configurations]]
+    name = "BP_JVM_VERSION"
+    description = "The Java version to install (8, 11, 17, 21, 25)"
+    default = "21"
+    build = true
+
+  [[metadata.configurations]]
+    name = "BP_JVM_TYPE"
+    description = "The JVM type to provide at runtime (JDK or JRE)"
+    default = "JRE"
+    build = true
+
+  [[metadata.configurations]]
+    name = "BP_JMA_ENABLED"
+    description = "Enable downloading Java Memory Assistant agent during build"
+    default = "false"
+    build = true
+
+  [[metadata.configurations]]
+    name = "BPL_JVM_HEAD_ROOM"
+    description = "The percentage of memory to leave as headroom (0-100)"
+    default = "25"
+    launch = true
+
+[buildpack]
+id = "taha/fips-java"
+version = "1.0.0"
+name = "FIPS Java Shim"
+
+
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets]]
+os = "linux"
+arch = "arm64"
+
+
+[[provides]]
+name = "jdk"
+
+[[provides]]
+name = "jre"

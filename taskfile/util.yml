@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  inspect-any:
+    desc: Show layers for a specific image (usage > task util:inspect-any IMG=name)
+    vars:
+      IMAGE: '{{default "taha/maven-fips-app:latest" .IMG}}'
+    cmds:
+      - |
+        paste <(docker inspect {{.IMAGE}} --format='{{range .RootFS.Layers}}{{.}}{{println}}{{end}}') <(docker history {{.IMAGE}} --format "{{.Size}}" | grep -v SIZE | tac) | column -t > 1.txt

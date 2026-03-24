@@ -1,0 +1,30 @@
+version: '3'
+env:
+  DOCKER_API_VERSION: "1.50"
+  PACK_VOLUME_KEY: "taha-fips-cache-key"
+includes:
+  img: taskfile/image.yml
+  builder: taskfile/builder.yml
+  app: taskfile/app.yml
+  util: taskfile/util.yml
+  bp: taskfile/buildpack.yml
+
+
+vars:
+  BUILD_IMAGE: taha/wolfi-build-image:latest
+  RUN_IMAGE: taha/wolfi-run-image:latest
+  BUILDER_NAME: taha/wolfi-fips-builder:latest
+  BUILDER_CONFIG: 2-builder/builder.toml
+
+tasks:
+  default:
+    cmds:
+      - task: all
+
+  all:
+    desc: Build everything from scratch
+    cmds:
+      - task: img:build-img
+      - task: img:run-img
+      - task: bp:package
+      - task: builder:create

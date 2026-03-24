@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  create:
+    desc: Create the final Cloud Native Builder
+    cmds:
+      - pack builder create {{.BUILDER_NAME}} --config {{.BUILDER_CONFIG}}
+
+  inspect:
+    desc: Inspect the final builder
+    cmds:
+      - pack builder inspect {{.BUILDER_NAME}}

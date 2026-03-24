@@ -1,0 +1,8 @@
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+RUN addgroup -S cnb --gid 1000 && \
+    adduser -S cnb -G cnb --uid 1000
+
+LABEL io.buildpacks.stack.id="taha/wolfi-build-image"
+
+USER 1000

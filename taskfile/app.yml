@@ -1,0 +1,37 @@
+version: '3'
+
+vars:
+  BUILDER: taha/wolfi-fips-builder:latest
+  MAVEN_APP_IMG: taha/maven-fips-app:latest
+  MAVEN_PATH: 3-sample-app
+  GRADLE_APP_IMG: taha/gradle-fips-app:latest
+  GRADLE_PATH: 4-gradle-app
+  #  only for github codespace  Docker API 1.43
+  LIFECYCLE_IMG: buildpacksio/lifecycle:0.17.2
+
+tasks:
+  build-maven:
+    desc: Build the Maven application
+    cmds:
+      - pack build {{.MAVEN_APP_IMG}} --path {{.MAVEN_PATH}} --builder {{.BUILDER}} --env BP_JVM_TYPE=JRE
+
+  run-maven:
+    desc: Run the Maven application
+    cmds:
+      - docker run -it --rm -m 512m {{.MAVEN_APP_IMG}}
+
+  build-gradle:
+    desc: Build the Gradle application
+    cmds:
+      - pack build {{.GRADLE_APP_IMG}} --path {{.GRADLE_PATH}} --builder {{.BUILDER}} --env BP_JVM_TYPE=JRE 
+
+  run-gradle:
+    desc: Run the Gradle application
+    cmds:
+      - docker run -it --rm -m 512m {{.GRADLE_APP_IMG}}
+
+  build-all:
+    desc: Build both Maven and Gradle apps
+    cmds:
+      - task: build-maven
+      - task: build-gradle

@@ -1,0 +1,36 @@
+{
+    "name": "CNB java",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "containerEnv": {
+        "DOCKER_API_VERSION": "1.41"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "version": "latest",
+            "enableNonRootChildContainerUsage": true
+        },
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "configureZshAsDefaultShell": false,
+            "username": "vscode"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-kubernetes-tools.vscode-kubernetes-tools",
+                "redhat.vscode-yaml",
+                "ms-azuretools.vscode-docker",
+                "pkief.material-icon-theme",
+                "ms-python.python",
+                "tamasfe.even-better-toml"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "remoteUser": "vscode",
+    "postCreateCommand": "sudo chmod 666 /var/run/docker.sock && pip3 install rich && sudo chown vscode:vscode /var/run/docker.sock || true"
+}

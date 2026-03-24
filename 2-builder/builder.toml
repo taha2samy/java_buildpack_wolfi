@@ -1,0 +1,210 @@
+description = "Custom Wolfi FIPS Builder"
+[stack]
+  id = "taha/wolfi-build-image" 
+  build-image = "taha/wolfi-build-image:latest"
+  run-image = "taha/wolfi-run-image:latest"
+ 
+[[targets]]
+  os = "linux"
+  arch = "amd64"
+[[targets]]
+  os = "linux"
+  arch = "arm64"
+
+[[buildpacks]]
+  uri = "docker://taha/fips-java:1.0.0"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/ca-certificates:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/syft:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/environment-variables:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/image-labels:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/procfile:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/jattach:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/java-memory-assistant:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/datadog:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/azure-application-insights:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/google-stackdriver:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/maven:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/gradle:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/sbt:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/executable-jar:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/spring-boot:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/apache-tomcat:latest"
+
+[[buildpacks]]
+  uri = "docker://paketobuildpacks/dist-zip:latest"
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/maven"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/apache-tomcat"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/dist-zip"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/procfile"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/jattach"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/azure-application-insights"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/google-stackdriver"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/datadog"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/java-memory-assistant"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/environment-variables"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/image-labels"
+    optional = true
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/gradle"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/apache-tomcat"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/dist-zip"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/procfile"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/jattach"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/azure-application-insights"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/google-stackdriver"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/datadog"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/java-memory-assistant"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/environment-variables"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/image-labels"
+    optional = true
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/sbt"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/jattach"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/java-memory-assistant"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/datadog"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/azure-application-insights"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/google-stackdriver"
+    optional = true

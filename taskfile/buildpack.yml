@@ -1,0 +1,22 @@
+version: '3'
+
+vars:
+  BP_NAME: taha/fips-java
+  BP_VERSION: 1.0.0
+  BP_PATH: ./fips-java-shim
+
+tasks:
+  package:
+    desc: Package the FIPS Java Buildpack as an OCI image
+    cmds:
+      - pack buildpack package {{.BP_NAME}}:{{.BP_VERSION}} --path {{.BP_PATH}} --format image
+
+  inspect:
+    desc: Inspect the packaged buildpack metadata
+    cmds:
+      - pack buildpack inspect {{.BP_NAME}}:{{.BP_VERSION}}
+
+  clean:
+    desc: Remove the local buildpack image
+    cmds:
+      - docker rmi {{.BP_NAME}}:{{.BP_VERSION}} || true

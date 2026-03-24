@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+import os
+import sys
+import re
+from pathlib import Path
+
+# =====================================================================
+# 0. UI & LOGGING SETUP
+# =====================================================================
+try:
+    from rich.console import Console
+    from rich.panel import Panel
+except ImportError:
+    class Console:
+        def print(self, *args, **kwargs): print(*args)
+    class Panel:
+        @staticmethod
+        def fit(text, title=""): return f"--- {title} ---\n{text}"
+
+# Detect phase output is suppressed by Lifecycle unless printed to stderr
+console = Console(stderr=True)
+
+def main():
+    # Detect arguments: $1 = platform dir, $2 = plan path
+    platform_dir = Path(sys.argv[1])
+    plan_path = Path(sys.argv[2])
+    app_dir = Path.cwd()
+
+    version = ""
+    source = ""
+
+    # =================================================================
+    # 1. PRIORITY 1: ENVIRONMENT VARIABLE (Enforce/Override)
+    # =================================================================
+    env_version = os.getenv("BP_JVM_VERSION")
+    if env_version:
+        version = env_version
+        source = "Environment Variable (Highest Priority)"
+
+    # =================================================================
+    # 2. PRIORITY 2: MAVEN (pom.xml)
+    # =================================================================
+    if not version and (app_dir / "pom.xml").exists():
+        content = (app_dir / "pom.xml").read_text()
+        # Look for java.version or maven.compiler.source tags
+        match = re.search(r'<(java\.version|maven\.compiler\.source)>([0-9.]+)</', content)
+        if match:
+            version = match.group(2)
+            source = "pom.xml"
+
+    # =================================================================
+    # 3. PRIORITY 3: GRADLE (build.gradle)
+    # =================================================================
+    if not version and (app_dir / "build.gradle").exists():
+        content = (app_dir / "build.gradle").read_text()
+        # Look for Toolchain or Compatibility settings
+        match = re.search(r'(JavaLanguageVersion\.of\(|sourceCompatibility\s*=\s*|targetCompatibility\s*=\s*)[\'"]?([0-9.]+)', content)
+        if match:
+            version = match.group(2)
+            source = "build.gradle"
+
+    # =================================================================
+    # 4. FINAL RESOLUTION & SANITIZATION
+    # =================================================================
+    # Fallback if nothing is found
+    if not version:
+        version = "21"
+        source = "Default Fallback"
+
+    # Map versions: 1.8 -> 8, 17.0.1 -> 17
+    clean_version = "8" if "1.8" in version else version.split('.')[0]
+
+    # Validate that we actually have this version in the Builder
+    jdk_path = Path(f"/opt/jdks/{clean_version}")
+    if not jdk_path.exists():
+        console.print(f"[bold red]ERROR:[/bold red] Java {clean_version} requested but not found in Builder!")
+        # Force fallback to 21 to prevent build failure if possible
+        clean_version = "21"
+        source += " (Fallback to 21 due to missing version)"
+
+    console.print(Panel.fit(
+        f"Detected Java: [bold yellow]{clean_version}[/bold yellow]\nSource: [bold blue]{source}[/bold blue]", 
+        title="FIPS Java Shim: DETECT"
+    ))
+
+    # =================================================================
+    # 5. WRITE BUILD PLAN
+    # =================================================================
+    # This writes to $2 (plan.toml) so the BUILD phase can read it via $3
+    with open(plan_path, "w") as f:
+        f.write('[[provides]]\nname = "jdk"\n')
+        f.write('[[provides]]\nname = "jre"\n')
+        f.write('[[requires]]\nname = "jdk"\n[requires.metadata]\nversion = "' + clean_version + '"\n')
+        f.write('[[requires]]\nname = "jre"\n[requires.metadata]\nversion = "' + clean_version + '"\n')
+
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()

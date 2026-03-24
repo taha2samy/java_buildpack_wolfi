@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+import os
+import sys
+import re
+import hashlib
+import shutil
+import urllib.request
+from pathlib import Path
+
+# ==============================================================================
+# [0] UTILITIES & CONFIGURATION
+# ==============================================================================
+G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m", "\033[0m", "\033[1m"
+TICK, BOX, ARROW = "✓", "❒", "↳"
+
+def log_header(title):
+    print(f"\n{BOLD}{C}===> {title}{RESET}")
+
+def log_step(layer, action, detail=""):
+    color = G if action in ["REUSE", "HIT", "READY"] else Y
+    symbol = TICK if action in ["REUSE", "HIT", "READY"] else BOX
+    print(f"     {BOLD}{layer:<10}{RESET} : {color}{symbol} {action:<10}{RESET} {R}{ARROW}{RESET} {detail}")
+
+def get_fingerprint(directory: Path):
+    if not directory.exists(): return "MISSING"
+    hasher = hashlib.sha256()
+    for p in sorted(directory.glob('bin/*')):
+        if p.is_file():
+            hasher.update(f"{p.name}{p.stat().st_size}".encode())
+    return hasher.hexdigest()[:12]
+
+def download_jma(target_dir: Path):
+    jma_url = "https://github.com/SAP-archive/java-memory-assistant/releases/download/0.5.0/java-memory-assistant-0.5.0.jar"
+    jma_jar = target_dir / "java-memory-assistant.jar"
+    if not jma_jar.exists():
+        urllib.request.urlretrieve(jma_url, jma_jar)
+    return jma_jar
+
+# ==============================================================================
+# [1] GLOBAL PARAMETERS
+# ==============================================================================
+def main():
+    if len(sys.argv) < 3: sys.exit(1)
+    layers_dir = Path(sys.argv[1])
+    plan_path = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("")
+    
+    log_header("FIPS Java Shim v4.18 (FIPS Env Restored)")
+
+    version = "21"
+    if plan_path.exists():
+        match = re.search(r'version\s*=\s*"([0-9.]+)"', plan_path.read_text())
+        if match: version = match.group(1)
+
+    jvm_type = os.getenv("BP_JVM_TYPE", "JRE").upper()
+    headroom = int(os.getenv("BPL_JVM_HEAD_ROOM", "25"))
+    ram_percentage = float(100 - headroom)
+    fips_base = "-Dorg.bouncycastle.fips.approved_only=true -Dkeystore.type=BCFKS -Djavax.net.ssl.trustStoreType=BCFKS -Djavax.net.ssl.trustStorePassword=changeit"
+
+    # ==========================================================================
+    # [LAYER 1] JDK LAYER (DIRECTORY: jdk/ + METADATA: jdk.toml)
+    # ==========================================================================
+    jdk_layer = layers_dir / "jdk"
+    jdk_toml = layers_dir / "jdk.toml"
+    jdk_src = Path(f"/opt/jdks/{version}")
+    jdk_fp = get_fingerprint(jdk_src)
+
+    if jdk_toml.exists() and jdk_fp in jdk_toml.read_text() and jdk_layer.exists():
+        log_step("JDK", "REUSE", f"Fingerprint: {jdk_fp}")
+    else:
+        log_step("JDK", "UPDATE", f"Source: {jdk_src}")
+        if jdk_layer.exists(): shutil.rmtree(jdk_layer)
+        jdk_layer.mkdir(parents=True)
+    
+    jdk_toml.write_text(f"""
+        [types]
+        build = true
+        cache = true
+        launch = false
+        [metadata]
+        fingerprint = "{jdk_fp}"
+        """.strip())    
+
+    env_build = jdk_layer / "env.build"
+    env_build.mkdir(exist_ok=True)
+    (env_build / "JAVA_HOME").write_text(str(jdk_src))
+    (env_build / "PATH.prepend").write_text(f"{jdk_src}/bin")
+    (env_build / "PATH.delim").write_text(":")
+    
+    jdk_trust_dir = "jre/lib" if version == "8" else "lib"
+    jdk_trust = jdk_src / jdk_trust_dir / "security/cacerts"
+    
+    if version == "8":
+        jdk_boot = (
+            f"{jdk_src}/{jdk_trust_dir}/ext/bc-fips.jar:"
+            f"{jdk_src}/{jdk_trust_dir}/ext/bcutil-fips.jar:"
+            f"{jdk_src}/{jdk_trust_dir}/ext/bctls-fips.jar"
+        )
+    else:
+        jdk_boot = (
+            f"{jdk_src}/lib/bc-fips.jar:"
+            f"{jdk_src}/lib/bcutil-fips.jar:"
+            f"{jdk_src}/lib/bctls-fips.jar"
+        )
+
+    java_opts = (
+        f"{fips_base} "
+        f"-Djavax.net.ssl.trustStore={jdk_trust} "
+        f"-Xbootclasspath/a:{jdk_boot}"
+    )
+
+    (env_build / "JAVA_TOOL_OPTIONS.override").write_text(java_opts)
+
+
+    # ==========================================================================
+    # [LAYER 2] JRE LAYER (DIRECTORY: jre/ + METADATA: jre.toml)
+    # ==========================================================================
+    jre_layer = layers_dir / "jre"
+    jre_toml = layers_dir / "jre.toml"
+
+    jre_src = jdk_src if jvm_type == "JDK" else Path(f"/opt/jres/{version}")
+    jre_fp = get_fingerprint(jre_src)
+
+    use_cache = (
+        jre_toml.exists() and
+        jre_layer.exists() and
+        jre_fp in jre_toml.read_text()
+    )
+
+    if use_cache:
+        log_step("JRE", "REUSE", "Restored from cache")
+    else:
+        log_step("JRE", "SYNC", f"Syncing {jre_src}")
+        if jre_layer.exists():
+            shutil.rmtree(jre_layer)
+        shutil.copytree(jre_src, jre_layer)
+
+    jre_toml.write_text(f"""
+    [types]
+    launch = true
+    cache = true
+
+    [metadata]
+    fingerprint = "{jre_fp}"
+    ram_percentage = "{ram_percentage}%"
+    """.strip())
+
+    env_launch = jre_layer / "env.launch"
+    env_launch.mkdir(exist_ok=True)
+
+    (env_launch / "JAVA_HOME").write_text(str(jre_layer))
+    (env_launch / "PATH.prepend").write_text(str(jre_layer / "bin"))
+    (env_launch / "PATH.delim").write_text(":")
+
+    if version == "8":
+        if jvm_type == "JRE":
+            jre_trust_dir = "lib"
+        else:
+            jre_trust_dir = "jre/lib"
+    else:
+        jre_trust_dir = "lib"
+
+    jre_trust = jre_layer / jre_trust_dir / "security/cacerts"
+
+    if version == "8":
+        base_path = f"{jre_layer}/{jre_trust_dir}/ext"
+    else:
+        base_path = f"{jre_layer}/lib"
+
+    jars = ["bc-fips.jar", "bcutil-fips.jar", "bctls-fips.jar"]
+    jre_boot = ":".join(f"{base_path}/{jar}" for jar in jars)
+
+    jma_opts = ""
+    if os.getenv("BP_JMA_ENABLED", "false").lower() == "true":
+        jma_jar = download_jma(jre_layer / "lib")
+        jma_opts = f"-javaagent:{jma_jar} -Djma.check_interval=5s -Djma.log_level=ERROR -Djma.max_frequency=1/1m -Djma.heap_dump_folder=/tmp -Djma.thresholds.heap=80% "
+        if version != "8":
+            jma_opts += "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED "
+        log_step("JMA", "READY", "Java Memory Assistant Configured")
+
+    ram_opts = f"-XX:+UseContainerSupport -XX:MaxRAMPercentage={ram_percentage}" if version == "8" else f"-XX:MaxRAMPercentage={ram_percentage}"
+
+    runtime_opts = (
+        f"{fips_base} "
+        f"-Djavax.net.ssl.trustStore={jre_trust} "
+        f"-Xbootclasspath/a:{jre_boot} "
+        f"{jma_opts}"
+        f"-XX:+ExitOnOutOfMemoryError "
+        f"{ram_opts}"
+    )
+
+    (env_launch / "JAVA_TOOL_OPTIONS.append").write_text(runtime_opts.strip())
+    (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
+    
+    log_step("SUMMARY", "READY", f"RAM%: {ram_percentage}% | FIPS: Enabled | Distroless: True")
+    print(f"{G}{BOLD}===> Buildpack successfully finished{RESET}\n")
+    
+    launch_toml = layers_dir / "launch.toml"
+    java_binary = jre_layer / "bin" / "java"
+    
+    launch_toml.write_text(f'''
+[[processes]]
+type = "check-java"
+command = "{java_binary}"
+args = ["-version"]
+working-dir = "/workspace"
+direct = true
+''')
+    # Logic to handle Vendor SBOM
+    vendor_sbom = jre_src / "java.cdx.json"
+    
+    if vendor_sbom.exists():
+        # Define destination path based on CNB Spec
+        # Path: <layer_dir>/sbom/<phase>/<layer_name>/
+        sbom_dir = jre_layer / "sbom" / "launch" / "jre"
+        sbom_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Copy the file
+        shutil.copy2(vendor_sbom, sbom_dir / "java.cdx.json")
+        
+        # Log discovery
+        log_step("JRE", "SBOM", f"Detected and linked: {vendor_sbom.name}")
+    else:
+        log_step("JRE", "SBOM", "No vendor SBOM found")
+if __name__ == "__main__":
+    main()

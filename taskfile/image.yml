@@ -1,0 +1,20 @@
+version: '3'
+
+tasks:
+  build-img:
+    desc: Build the Wolfi Build Image
+    dir: build-image
+    cmds:
+      - docker build -t {{.BUILD_IMAGE}} .
+
+  run-img:
+    desc: Build the Wolfi Run Image (Distroless)
+    dir: run-image
+    cmds:
+      - docker build -t {{.RUN_IMAGE}} .
+
+  run-img-with-shell:
+    desc: Build the Wolfi Run Image (with shell for debugging)
+    dir: run-image
+    cmds:
+      - docker build -t {{.RUN_IMAGE}}-shell -f Dockerfile.run .
