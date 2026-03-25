@@ -13,11 +13,9 @@ try:
     import jdk
     import jre
 except ImportError as e:
-    print(f"Error: Could not import modules: {e}")
     sys.exit(1)
 
 G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m", "\033[0m", "\033[1m"
-TICK, BOX, ARROW = "✓", "❒", "↳"
 
 def log_header(title):
     print(f"\n{BOLD}{C}===> {title}{RESET}")
@@ -30,7 +28,6 @@ def download_jma(target_dir: Path):
     jma_url = "https://github.com/SAP-archive/java-memory-assistant/releases/download/0.5.0/java-memory-assistant-0.5.0.jar"
     jma_jar = target_dir / "java-memory-assistant.jar"
     if not jma_jar.exists():
-        log_step("JMA", "FETCH", "Downloading Assistant...")
         urllib.request.urlretrieve(jma_url, jma_jar)
     return jma_jar
 
@@ -38,53 +35,40 @@ def main():
     if len(sys.argv) < 3: sys.exit(1)
     layers_dir = Path(sys.argv[1])
     plan_path = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("")
-    
     log_header("FIPS Java Buildpack v5.0 (Modular)")
-
     version = "21"
     if plan_path.exists():
         match = re.search(r'version\s*=\s*"([0-9.]+)"', plan_path.read_text())
         if match: version = match.group(1)
-
     jvm_type = os.getenv("BP_JVM_TYPE", "JRE").upper()
     is_jdk_mode = (jvm_type == "JDK")
-
     if not jdk.install_jdk(layers_dir, version, launch=is_jdk_mode):
         sys.exit(1)
-
     if not is_jdk_mode:
         if not jre.install_jre_fips(layers_dir, version, is_jdk_mode=False):
             sys.exit(1)
-
     runtime_layer = layers_dir / ("jdk" if is_jdk_mode else "jre")
     env_launch_dir = runtime_layer / "env.launch"
-    
     if env_launch_dir.exists():
         if os.getenv("BP_JMA_ENABLED", "false").lower() == "true":
             lib_path = runtime_layer / ("jre/lib" if (version == "8" and is_jdk_mode) else "lib")
             lib_path.mkdir(parents=True, exist_ok=True)
             jma_jar = download_jma(lib_path)
-            
             jma_opts = f"-javaagent:{jma_jar.resolve()} -Djma.check_interval=5s -Djma.log_level=ERROR "
             if version != "8":
                 jma_opts += "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED "
-            
-            with open(env_launch_dir / "JAVA_TOOL_OPTIONS.append", "a") as f:
-                f.write(f" {jma_opts}")
-            log_step("JMA", "READY", "Java Memory Assistant injected")
-
+            with open(env_launch_dir / "JAVA_TOOL_OPTIONS.append", "ab") as f:
+                f.write(f" {jma_opts}".encode('utf-8'))
     launch_toml = layers_dir / "launch.toml"
     java_binary = (runtime_layer / "bin" / "java").resolve()
-    
     launch_toml.write_text(f'''
 [[processes]]
 type = "web"
 command = "{java_binary}"
-args = ["-jar", "/workspace/app.jar"]
+args = ["org.springframework.boot.loader.launch.JarLauncher"]
 working-dir = "/workspace"
 direct = true
 ''')
-
     print(f"\n{G}{BOLD}===> FIPS Java Buildpack successfully finished{RESET}\n")
 
 if __name__ == "__main__":

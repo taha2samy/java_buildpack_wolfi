@@ -8,19 +8,15 @@ import shutil
 import platform
 import urllib.request
 from pathlib import Path
-
 G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m", "\033[0m", "\033[1m"
-
 def log_step(action, detail=""):
     print(f"     {BOLD}{'JDK':<10}{RESET} : {G if action in ['REUSE', 'READY'] else Y}{action:<10}{RESET} -> {detail}")
-
 def verify_sha256(file_path, expected_sha):
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as f:
         for byte_block in iter(lambda: f.read(4096), b""):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest() == expected_sha
-
 def get_latest_jdk_info(version):
     arch = "x64" if platform.machine() in ["x86_64", "AMD64"] else "aarch64"
     url = f"https://api.adoptium.net/v3/assets/latest/{version}/hotspot?os=linux&architecture={arch}&image_type=jdk&vendor=eclipse"
@@ -36,7 +32,6 @@ def get_latest_jdk_info(version):
             }
     except Exception:
         return None
-
 def install_jdk(layers_dir, version, launch=False):
     layers_dir = Path(layers_dir).resolve()
     jdk_layer = layers_dir / "jdk"
@@ -64,7 +59,6 @@ def install_jdk(layers_dir, version, launch=False):
                     m.name = m.name.split('/', 1)[1]
                     if m.name: tar.extract(m, path=jdk_layer)
         if tar_path.exists(): os.remove(tar_path)
-    
     launch_val = str(launch).lower()
     jdk_toml.write_text(f'[types]\nbuild = true\ncache = true\nlaunch = {launch_val}\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"')
     for phase in ["build", "launch"]:
@@ -74,7 +68,9 @@ def install_jdk(layers_dir, version, launch=False):
         (env_dir / "JAVA_HOME").write_text(str(jdk_layer))
         (env_dir / "PATH.prepend").write_text(str(jdk_layer / "bin"))
         (env_dir / "PATH.delim").write_text(":")
-        (env_dir / "JAVA_TOOL_OPTIONS.append").write_text("-XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8")
-        (env_dir / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
+        with open(env_dir / "JAVA_TOOL_OPTIONS.append", "wb") as f:
+            f.write(b"-XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8")
+        with open(env_dir / "JAVA_TOOL_OPTIONS.delim", "wb") as f:
+            f.write(b" ")
     log_step("READY", f"JDK {info['version']} installed.")
     return True
