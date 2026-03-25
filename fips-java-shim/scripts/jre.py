@@ -188,7 +188,6 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
         match = list(bc_dest.glob(f"{prefix}*.jar"))
         if match:
             bc_jars.append(str(match[0].resolve()))
-
     boot = ":".join(bc_jars)
 
     fips_opts = (
@@ -202,8 +201,7 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
     )
 
     (env_launch / "JAVA_TOOL_OPTIONS.append").write_text(fips_opts)
-    (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
-if __name__ == "__main__":
+    (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")if __name__ == "__main__":
     if len(sys.argv) < 3:
         sys.exit(1)
 
