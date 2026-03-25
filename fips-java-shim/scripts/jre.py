@@ -12,10 +12,10 @@ from pathlib import Path
 try:
     from jinja2 import Template
 except ImportError:
-    print("Error: jinja2 module not found. Run 'pip install jinja2'")
     sys.exit(1)
 
 G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m", "\033[0m", "\033[1m"
+BP_ROOT = Path(__file__).parent.parent.resolve()
 
 def log_header(title):
     print(f"\n{BOLD}{C}===> {title}{RESET}")
@@ -45,8 +45,8 @@ def get_jre_info(version):
                 "sha256": asset['binary']['package']['checksum'],
                 "version": asset['version']['openjdk_version']
             }
-    except Exception as e:
-        print(f"{R}Adoptium API Error: {e}{RESET}")
+        return None
+    except Exception:
         return None
 
 def download_file(url, target_path, expected_sha):
@@ -65,22 +65,19 @@ def install_jre_fips(layers_dir, version, is_jdk_mode=False):
     layers_dir = Path(layers_dir).resolve()
     jre_layer = layers_dir / "jre"
     jre_toml = layers_dir / "jre.toml"
-    config_path = Path("fips-java-shim/config/bouncycastle.json").resolve()
-    tpl_path = Path("fips-java-shim/templates/java.security.j2").resolve()
-    
+    config_path = BP_ROOT / "config" / "bouncycastle.json"
+    tpl_path = BP_ROOT / "templates" / "java.security.j2"
     with open(config_path, 'r') as f:
         bc_config = json.load(f)
     info = get_jre_info(version)
     if not info: return False
-
     current_sha = ""
     if jre_toml.exists():
         import re
         match = re.search(r'sha256\s*=\s*"(\w+)"', jre_toml.read_text())
         if match: current_sha = match.group(1)
-
     if current_sha == info['sha256'] and jre_layer.exists():
-        log_step("REUSE", f"JRE v{info['version']} (FIPS already applied)")
+        log_step("REUSE", f"JRE v{info['version']}")
     else:
         log_step("UPDATE", f"Hardening JRE {info['version']}")
         tar_path = Path("/tmp/jre_bundle.tar.gz")
@@ -93,7 +90,6 @@ def install_jre_fips(layers_dir, version, is_jdk_mode=False):
                     m.name = m.name.split('/', 1)[1]
                     if m.name: tar.extract(m, path=jre_layer)
         if tar_path.exists(): os.remove(tar_path)
-
         if version == "8":
             bc_dest = jre_layer / "lib/ext"
             sec_dir = jre_layer / "lib/security"
@@ -102,32 +98,24 @@ def install_jre_fips(layers_dir, version, is_jdk_mode=False):
             bc_dest = jre_layer / "lib"
             sec_dir = jre_layer / "conf/security"
             ks_dir = jre_layer / "lib/security"
-
         bc_dest.mkdir(parents=True, exist_ok=True)
         sec_dir.mkdir(parents=True, exist_ok=True)
-
         for key in ["fips", "util_fips", "tls_fips"]:
             url = bc_config[f"bouncycastle_{key}_url"]
             sha = bc_config[f"bouncycastle_{key}_sha"]
             download_file(url, bc_dest / url.split('/')[-1], sha)
-
         template = Template(tpl_path.read_text())
-        sec_file = sec_dir / "java.security"
-        sec_file.write_text(template.render(version=version))
-
+        (sec_dir / "java.security").write_text(template.render(version=version))
         convert_keystore(jre_layer, ks_dir, bc_dest)
-
     if version == "8":
         bc_dest = jre_layer / "lib/ext"
-        sec_file = jre_layer / "lib/security/java.security"
+        sec_dir = jre_layer / "lib/security"
         ks_dir = jre_layer / "lib/security"
     else:
         bc_dest = jre_layer / "lib"
-        sec_file = jre_layer / "conf/security/java.security"
+        sec_dir = jre_layer / "conf/security"
         ks_dir = jre_layer / "lib/security"
-
-    setup_env(jre_layer, bc_dest, ks_dir, sec_file)
-    
+    setup_env(jre_layer, bc_dest, ks_dir, sec_dir / "java.security")
     launch_val = "false" if is_jdk_mode else "true"
     jre_toml.write_text(f'launch = {launch_val}\nbuild = false\ncache = true\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"\nfips = "true"')
     log_step("READY", f"FIPS JRE {info['version']} configured.")
@@ -143,7 +131,7 @@ def convert_keystore(jre_path, ks_dir, bc_dest):
     bc_fips = next(bc_dest.glob("bc-fips-*.jar"))
     bc_util = next(bc_dest.glob("bcutil-fips-*.jar"))
     clean_env = os.environ.copy()
-    clean_env["JAVA_TOOL_OPTIONS"] = ""
+    clean_env.pop("JAVA_TOOL_OPTIONS", None)
     cmd = [
         str(jre_path / "bin/keytool"), "-importkeystore",
         "-srckeystore", str(backup), "-srcstorepass", "changeit", "-srcstoretype", "PKCS12",
@@ -154,7 +142,6 @@ def convert_keystore(jre_path, ks_dir, bc_dest):
     res = subprocess.run(cmd, env=clean_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if res.returncode == 0:
         shutil.move(str(temp_bcfks), str(cacerts))
-        log_step("SUCCESS", "Keystore converted.")
 
 def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
     env_launch = jre_layer / "env.launch"
@@ -162,7 +149,10 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
     (env_launch / "JAVA_HOME").write_text(str(jre_layer.resolve()))
     (env_launch / "PATH.prepend").write_text(str((jre_layer / "bin").resolve()))
     (env_launch / "PATH.delim").write_text(":")
-    boot_elements = [str(p.resolve()) for p in bc_dest.glob("bc*.jar")]
+    boot_elements = []
+    for prefix in ["bc-fips", "bcutil-fips", "bctls-fips"]:
+        match = list(bc_dest.glob(f"{prefix}*.jar"))
+        if match: boot_elements.append(str(match[0].resolve()))
     jre_boot = ":".join(boot_elements)
     fips_opts = (
         f"-Dorg.bouncycastle.fips.approved_only=true -Djava.security.properties=={sec_file.resolve()} "
@@ -175,8 +165,8 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3: sys.exit(1)
-    target_layers, java_ver = sys.argv[1], sys.argv[2]
-    jdk_mode = sys.argv[3].lower() == "jdk" if len(sys.argv) > 3 else False
-    log_header(f"JRE FIPS Setup - Java {java_ver}")
-    if install_jre_fips(target_layers, java_ver, jdk_mode):
-        print(f"\n{G}{BOLD}SUCCESS: JRE FIPS is ready.{RESET}\n")
+    target, ver = sys.argv[1], sys.argv[2]
+    jtype = sys.argv[3].lower() if len(sys.argv) > 3 else "jre"
+    log_header(f"JRE FIPS Builder - Java {ver}")
+    if install_jre_fips(target, ver, (jtype == "jdk")):
+        print(f"\n{G}{BOLD}SUCCESS: JRE FIPS Ready.{RESET}\n")
