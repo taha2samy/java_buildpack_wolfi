@@ -1,0 +1,11 @@
+{
+    "bouncycastle_fips_sha": "044fcd8a29d236edea8a5b414406cdae63b475f9ad9f05fe2dc904a277941115",
+    "bouncycastle_fips_url": "https://repo1.maven.org/maven2/org/bouncycastle/bc-fips/2.1.2/bc-fips-2.1.2.jar",
+    "bouncycastle_fips_version": "2.1.2",
+    "bouncycastle_tls_fips_sha": "688410563445e1a65ff33cb67842499f0788994d752c3df8f7ea4a0d40ddbf50",
+    "bouncycastle_tls_fips_url": "https://repo1.maven.org/maven2/org/bouncycastle/bctls-fips/2.1.22/bctls-fips-2.1.22.jar",
+    "bouncycastle_tls_fips_version": "2.1.22",
+    "bouncycastle_util_fips_sha": "503aaf5c2c5b7c729547462efe13699b5f6dacf9be150b7c48bba974b793dc92",
+    "bouncycastle_util_fips_url": "https://repo1.maven.org/maven2/org/bouncycastle/bcutil-fips/2.1.5/bcutil-fips-2.1.5.jar",
+    "bouncycastle_util_fips_version": "2.1.5"
+}

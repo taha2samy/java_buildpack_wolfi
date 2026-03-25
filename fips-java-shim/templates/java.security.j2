@@ -1,0 +1,185 @@
+# #############################################################################
+# JAVA VERSION: {{ version }}
+# #############################################################################
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 0: SYSTEM CORE & PACKAGE ACCESS
+# Based on FIPS 140-3 Policy Section 6.2 (SecurityManager Enforcement)
+# -----------------------------------------------------------------------------
+{% if version == '8' %}
+package.access=sun.,com.sun.xml.internal.,com.sun.imageio.,com.sun.istack.internal.,com.sun.jmx.,com.sun.media.sound.,com.sun.naming.internal.,com.sun.proxy.,com.sun.corba.se.,com.sun.org.apache.bcel.internal.,com.sun.org.apache.regexp.internal.,com.sun.org.apache.xerces.internal.,com.sun.org.apache.xpath.internal.,com.sun.org.apache.xalan.internal.extensions.,com.sun.org.apache.xalan.internal.lib.,com.sun.org.apache.xalan.internal.res.,com.sun.org.apache.xalan.internal.templates.,com.sun.org.apache.xalan.internal.utils.,com.sun.org.apache.xalan.internal.xslt.,com.sun.org.apache.xalan.internal.xsltc.cmdline.,com.sun.org.apache.xalan.internal.xsltc.compiler.,com.sun.org.apache.xalan.internal.xsltc.trax.,com.sun.org.apache.xalan.internal.xsltc.util.,com.sun.org.apache.xml.internal.res.,com.sun.org.apache.xml.internal.resolver.helpers.,com.sun.org.apache.xml.internal.resolver.readers.,com.sun.org.apache.xml.internal.security.,com.sun.org.apache.xml.internal.serializer.utils.,com.sun.org.apache.xml.internal.utils.,com.sun.org.glassfish.,com.oracle.xmlns.internal.,com.oracle.webservices.internal.,oracle.jrockit.jfr.,org.jcp.xml.dsig.internal.,jdk.internal.,jdk.nashorn.internal.,jdk.nashorn.tools.,jdk.xml.internal.,com.sun.activation.registries.
+
+package.definition=sun.,com.sun.xml.internal.,com.sun.imageio.,com.sun.istack.internal.,com.sun.jmx.,com.sun.media.sound.,com.sun.naming.internal.,com.sun.proxy.,com.sun.corba.se.,com.sun.org.apache.bcel.internal.,com.sun.org.apache.regexp.internal.,com.sun.org.apache.xerces.internal.,com.sun.org.apache.xpath.internal.,com.sun.org.apache.xalan.internal.extensions.,com.sun.org.apache.xalan.internal.lib.,com.sun.org.apache.xalan.internal.res.,com.sun.org.apache.xalan.internal.templates.,com.sun.org.apache.xalan.internal.utils.,com.sun.org.apache.xalan.internal.xslt.,com.sun.org.apache.xalan.internal.xsltc.cmdline.,com.sun.org.apache.xalan.internal.xsltc.compiler.,com.sun.org.apache.xalan.internal.xsltc.trax.,com.sun.org.apache.xalan.internal.xsltc.util.,com.sun.org.apache.xml.internal.res.,com.sun.org.apache.xml.internal.resolver.helpers.,com.sun.org.apache.xml.internal.resolver.readers.,com.sun.org.apache.xml.internal.security.,com.sun.org.apache.xml.internal.serializer.utils.,com.sun.org.apache.xml.internal.utils.,com.sun.org.glassfish.,com.oracle.xmlns.internal.,com.oracle.webservices.internal.,oracle.jrockit.jfr.,org.jcp.xml.dsig.internal.,jdk.internal.,jdk.nashorn.internal.,jdk.nashorn.tools.,jdk.xml.internal.,com.sun.activation.registries.
+
+policy.url.1=file:${java.home}/lib/security/java.policy
+{% else %}
+package.access=sun.,com.sun.xml.internal.,com.sun.imageio.,com.sun.istack.internal.,com.sun.jmx.,com.sun.media.sound.,com.sun.naming.internal.,com.sun.proxy.,com.sun.corba.se.,com.sun.org.apache.bcel.internal.,com.sun.org.apache.regexp.internal.,com.sun.org.apache.xerces.internal.,com.sun.org.apache.xpath.internal.,com.sun.org.apache.xalan.internal.extensions.,com.sun.org.apache.xalan.internal.lib.,com.sun.org.apache.xalan.internal.res.,com.sun.org.apache.xalan.internal.templates.,com.sun.org.apache.xalan.internal.utils.,com.sun.org.apache.xalan.internal.xslt.,com.sun.org.apache.xalan.internal.xsltc.cmdline.,com.sun.org.apache.xalan.internal.xsltc.compiler.,com.sun.org.apache.xalan.internal.xsltc.trax.,com.sun.org.apache.xalan.internal.xsltc.util.,com.sun.org.apache.xml.internal.res.,com.sun.org.apache.xml.internal.resolver.helpers.,com.sun.org.apache.xml.internal.resolver.readers.,com.sun.org.apache.xml.internal.security.,com.sun.org.apache.xml.internal.serializer.utils.,com.sun.org.apache.xml.internal.utils.,com.sun.org.glassfish.,com.oracle.xmlns.internal.,com.oracle.webservices.internal.,oracle.jrockit.jfr.,org.jcp.xml.dsig.internal.,jdk.internal.,jdk.nashorn.internal.,jdk.nashorn.tools.,jdk.xml.internal.,com.sun.activation.registries.,jdk.jfr.events.,jdk.jfr.internal.,jdk.management.jfr.internal.
+
+package.definition=sun.,com.sun.xml.internal.,com.sun.imageio.,com.sun.istack.internal.,com.sun.jmx.,com.sun.media.sound.,com.sun.naming.internal.,com.sun.proxy.,com.sun.corba.se.,com.sun.org.apache.bcel.internal.,com.sun.org.apache.regexp.internal.,com.sun.org.apache.xerces.internal.,com.sun.org.apache.xpath.internal.,com.sun.org.apache.xalan.internal.extensions.,com.sun.org.apache.xalan.internal.lib.,com.sun.org.apache.xalan.internal.res.,com.sun.org.apache.xalan.internal.templates.,com.sun.org.apache.xalan.internal.utils.,com.sun.org.apache.xalan.internal.xslt.,com.sun.org.apache.xalan.internal.xsltc.cmdline.,com.sun.org.apache.xalan.internal.xsltc.compiler.,com.sun.org.apache.xalan.internal.xsltc.trax.,com.sun.org.apache.xalan.internal.xsltc.util.,com.sun.org.apache.xml.internal.res.,com.sun.org.apache.xml.internal.resolver.helpers.,com.sun.org.apache.xml.internal.resolver.readers.,com.sun.org.apache.xml.internal.security.,com.sun.org.apache.xml.internal.serializer.utils.,com.sun.org.apache.xml.internal.utils.,com.sun.org.glassfish.,com.oracle.xmlns.internal.,com.oracle.webservices.internal.,oracle.jrockit.jfr.,org.jcp.xml.dsig.internal.,jdk.internal.,jdk.nashorn.internal.,jdk.nashorn.tools.,jdk.xml.internal.,com.sun.activation.registries.,jdk.jfr.events.,jdk.jfr.internal.,jdk.management.jfr.internal.
+
+policy.url.1=file:${java.home}/conf/security/java.policy
+{% endif %}
+policy.url.2=file:${user.home}/.java.policy
+security.overridePropertiesFile=true
+security.useSystemPropertiesFile=false
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 1: THE FIPS PROVIDER CHAIN
+# Based on FIPS 140-3 Security Policy Section 1.1, 2, and 6.3
+# -----------------------------------------------------------------------------
+# The Bouncy Castle FIPS provider is the primary cryptographic module.
+# Configuration "C:HYBRID;ENABLE{ALL};" utilizes native acceleration (AVX/VAES) 
+# as described in Section 1.1.1 (Page 5) while maintaining FIPS compliance.
+security.provider.1=org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider C:HYBRID;ENABLE{ALL};
+
+# The Bouncy Castle JSSE provider handles secure connections (TLS 1.2/1.3).
+# It is linked to the BCFIPS provider to ensure FIPS-approved algorithms 
+# (Table 10, Page 36) are used during handshakes.
+security.provider.2=org.bouncycastle.jsse.provider.BouncyCastleJsseProvider fips:BCFIPS
+
+# Standard Sun providers are assigned lower priority to prevent fallback 
+# to non-FIPS cryptographic implementations.
+security.provider.3=sun.security.provider.Sun
+security.provider.4=sun.security.rsa.SunRsaSign
+security.provider.5=sun.security.ec.SunEC
+security.provider.6=com.sun.crypto.provider.SunJCE
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 2: LIBRARY-LEVEL ENFORCEMENT
+# Based on FIPS 140-3 Security Policy Section 6.3 (Page 39)
+# -----------------------------------------------------------------------------
+# This property ensures the module starts in "Approved Mode" by default.
+# When set to true, non-approved services (detailed in Table 6, Page 22)
+# are explicitly disabled and inaccessible to the JVM.
+# This aligns with the "Basic Enforcement" rules in Section 2.1 (Page 23).
+org.bouncycastle.fips.approved_only=true
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 3: ENTROPY & RANDOMNESS (FIPS 140-3 DRBG)
+# Based on FIPS 140-3 Security Policy Section 6.1 & 6.4 (Page 39-41)
+# -----------------------------------------------------------------------------
+# Configures the system source of seed data for SecureRandom. 
+# Utilizing /dev/urandom for non-blocking entropy in containerized environments.
+securerandom.source=file:/dev/urandom
+
+# Explicitly configures the JVM to use the BCFIPS Approved DRBG 
+# (Deterministic Random Bit Generator) as the primary "strong" algorithm.
+# This ensures that random number generation conforms to SP 800-90A 
+# as mandated in Section 6.4.
+securerandom.strongAlgorithms=DEFAULT:BCFIPS
+
+# Statistical entropy health test factors (C values) for the Repetition 
+# Count Test (RCT) and Adaptive Proportion Test (APT) as specified 
+# in Section 6.4 (Page 41) of the Security Policy.
+org.bouncycastle.entropy.factors=4, 13, 8.0
+
+# -----------------------------------------------------------------------------
+# BLOCK 4: THE GREAT WALL (ALGORITHM RESTRICTIONS)
+# Based on FIPS 140-3 Security Policy Table 6 (Page 22)
+# -----------------------------------------------------------------------------
+# This block explicitly prohibits algorithms listed as "Non-Approved" 
+# and "Not Allowed" in the Security Policy to prevent any insecure fallback.
+
+# 1. Certification Path Validation Restrictions
+# Blocks MD2, MD5, and SHA-1 signatures. 
+# Enforces minimum key sizes for RSA and DSA (2048-bit) and EC (224-bit) 
+# as required for FIPS 140-3 compliance.
+jdk.certpath.disabledAlgorithms=MD2, MD5, SHA1 keySize < 1024, RSA keySize < 2048, DSA keySize < 2048, EC keySize < 224
+
+# 2. TLS/SSL Protocol and Cipher Suite Restrictions
+# Disables non-compliant protocols (SSLv3, TLS 1.0, TLS 1.1).
+# Blocks non-approved ciphers listed in Table 6: RC4, DES, Triple-DES (TDEA), 
+# MD5, and anonymous suites. Enforces 2048-bit minimum for DH and RSA exchange.
+jdk.tls.disabledAlgorithms=SSLv3, TLSv1, TLSv1.1, RC4, DES, 3DES_EDE_CBC, TDEA, MD5, NULL, anon, ECDH, DH keySize < 2048, RSA keySize < 2048
+
+# 3. Legacy Algorithm Constraints
+# Prevents use of weak primitives for any internal cryptographic operations.
+# Strictly prohibits MD5, SHA-1 signing, and sub-2048 bit asymmetric keys.
+jdk.security.legacyAlgorithms=MD2, MD5, SHA1, RSA keySize < 2048, DSA keySize < 2048
+
+# 4. Specific FIPS 140-3 Algorithm Disabling (Table 6)
+# Prevents use of non-compliant block ciphers and hashes:
+# IDEA, RC2, SEED, RIPEMD, TIGER, WHIRLPOOL, Poly1305.
+jdk.security.ca.disabledAlgorithms=IDEA, RC2, RC4, DES, TDEA, 3DES, SEED, RIPEMD128, RIPEMD160, TIGER, WHIRLPOOL, SipHash, Poly1305
+    
+# -----------------------------------------------------------------------------
+# BLOCK 5: THE SACRED VAULT (KEYSTORE BOUNDARY)
+# Based on FIPS 140-3 Security Policy Section 2 (Page 6)
+# -----------------------------------------------------------------------------
+# The Cryptographic Boundary is defined as the module JAR file. To ensure all 
+# persistent keys and certificates remain within this boundary using FIPS 
+# approved algorithms, the BCFKS (Bouncy Castle FIPS KeyStore) type is mandated.
+
+# Sets the default KeyStore type to BCFKS.
+# BCFKS utilizes FIPS-approved integrity mechanisms (HMAC-SHA256) and 
+# encryption (AES-CCM/KWP) for protecting Sensitive Security Parameters (SSPs)
+# as listed in Table 12 (Page 50).
+keystore.type=BCFKS
+
+# Disables compatibility mode for legacy KeyStore types (JKS/PKCS12).
+# This prevents the JVM from falling back to non-FIPS compliant storage 
+# formats, ensuring strict adherence to the "Approved Mode" requirements 
+# defined in Section 6.3 (Page 39).
+keystore.type.compat=false
+
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 6: NETWORK HANDSHAKE OVERRIDES (BC-JSSE)
+# -----------------------------------------------------------------------------
+ssl.SocketFactory.provider=org.bouncycastle.jsse.provider.SSLSocketFactoryImpl
+ssl.ServerSocketFactory.provider=org.bouncycastle.jsse.provider.SSLServerSocketFactoryImpl
+ssl.KeyManagerFactory.algorithm=PKIX
+ssl.TrustManagerFactory.algorithm=PKIX
+certpathvalidator.type=PKIX
+certpath.validator.provider=BCFIPS
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 6: NETWORK HANDSHAKE OVERRIDES (BC-JSSE)
+# Based on FIPS 140-3 Security Policy Sections 2, 2.2, and 4.3
+# -----------------------------------------------------------------------------
+# To maintain the Cryptographic Boundary (Section 2, Page 6) during network
+# operations, the default JSSE (Java Secure Socket Extension) is directed 
+# to the Bouncy Castle FIPS implementation. 
+
+# Redirects SSL/TLS socket creation to the FIPS-compliant JSSE implementation.
+# This ensures that TLS handshakes utilize Approved Algorithms (Table 4, Page 13)
+# and Approved GCM IV generation as mandated in Section 2.2 (Page 24).
+ssl.ServerSocketFactory.provider=org.bouncycastle.jsse.provider.SSLServerSocketFactoryImpl
+
+# Configures the Key and Trust Managers to use PKIX (Public Key Infrastructure 
+# X.509) algorithms. This is required for the "Signature Verification" 
+# services listed in Table 10 (Page 32).
+ssl.KeyManagerFactory.algorithm=PKIX
+ssl.TrustManagerFactory.algorithm=PKIX
+
+# Enforces the use of BCFIPS as the primary provider for Certificate Path 
+# Validation. This ensures that SSL/TLS certificates are validated against 
+# FIPS 140-3 criteria, prohibiting weak hashes or insufficient key sizes 
+# during the certificate chain verification.
+certpathvalidator.type=PKIX
+certpath.validator.provider=BCFIPS
+
+
+
+
+# -----------------------------------------------------------------------------
+# BLOCK 7: FINAL HARDENING & COMPLIANCE TWEAKS
+# Based on FIPS 140-3 Guidelines for Cryptographic Policy (Section 6)
+# -----------------------------------------------------------------------------
+# Ensures that Java uses the Unlimited Strength Jurisdiction Policy.
+# This is required for FIPS-approved AES-256 and RSA-4096 operations.
+crypto.policy=unlimited
+
+
+# Hardens the DNS lookup to prevent spoofing by caching negative lookups.
+networkaddress.cache.negative.ttl=10
+
+# Security property to prevent serialization attacks on older JCEKS keystores,
+# even though BCFKS is the mandated type in Block 5.
+jceks.key.serialFilter=java.lang.Enum;java.security.KeyRep;java.security.KeyRep$Type;javax.crypto.spec.SecretKeySpec;!*
