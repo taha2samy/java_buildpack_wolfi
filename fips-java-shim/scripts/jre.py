@@ -206,6 +206,7 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
 
     (env_launch / "JAVA_TOOL_OPTIONS.append").write_text(fips_opts)
     (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
+    pass
 
 
 if __name__ == "__main__":
