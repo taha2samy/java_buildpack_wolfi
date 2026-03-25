@@ -175,6 +175,10 @@ def convert_keystore(jre_path, ks_dir, bc_dest):
 
     if subprocess.run(cmd, env=clean_env, stdout=subprocess.DEVNULL).returncode == 0:
         shutil.move(str(temp), str(cacerts))
+
+
+
+
 def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
     env_launch = jre_layer / "env.launch"
     env_launch.mkdir(exist_ok=True)
@@ -201,7 +205,10 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
     )
 
     (env_launch / "JAVA_TOOL_OPTIONS.append").write_text(fips_opts)
-    (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")if __name__ == "__main__":
+    (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
+
+
+if __name__ == "__main__":
     if len(sys.argv) < 3:
         sys.exit(1)
 
