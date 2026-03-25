@@ -195,9 +195,6 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
 
     fips_opts = (
         f"-Dorg.bouncycastle.fips.approved_only=true "
-        f"-Dorg.bouncycastle.fips.native_secure_random=true "
-        f"-Dorg.bouncycastle.crypto.fips.seeder=NATIVE "
-        f"-Djava.security.egd=file:/dev/urandom "
         f"-Djava.security.properties={sec_file.resolve()} "
         f"-Dkeystore.type=BCFKS "
         f"-Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts "
