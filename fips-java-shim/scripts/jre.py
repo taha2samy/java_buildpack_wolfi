@@ -189,10 +189,11 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
         match = list(bc_dest.glob(f"{prefix}*.jar"))
         if match:
             bc_jars.append(str(match[0].resolve()))
-    
     boot = ":".join(bc_jars)
+
     fips_opts = (
         f"-Dorg.bouncycastle.fips.approved_only=true "
+        f"-Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM "
         f"-Dkeystore.type=BCFKS "
         f"-Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts "
         f"-Djavax.net.ssl.trustStoreType=BCFKS "
@@ -201,8 +202,10 @@ def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
         f"-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75.0"
     )
 
-    (env_launch / "JAVA_TOOL_OPTIONS.append").write_text(fips_opts)
-    (env_launch / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
+    with open(env_launch / "JAVA_TOOL_OPTIONS.append", "wb") as f:
+        f.write(fips_opts.encode('utf-8'))
+    with open(env_launch / "JAVA_TOOL_OPTIONS.delim", "wb") as f:
+        f.write(b" ")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
