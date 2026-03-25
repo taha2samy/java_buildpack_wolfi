@@ -7,6 +7,7 @@ RUN apk update && \
     bash \
     gzip \
     curl \
+    shadow \
     python3 \
     py3-pip
 
