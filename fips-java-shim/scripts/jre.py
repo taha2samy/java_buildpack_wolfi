@@ -45,7 +45,6 @@ def get_jre_info(version):
                 "sha256": asset['binary']['package']['checksum'],
                 "version": asset['version']['openjdk_version']
             }
-        return None
     except Exception:
         return None
 
@@ -74,7 +73,8 @@ def install_jre_fips(layers_dir, version, is_jdk_mode=False):
     current_sha = ""
     if jre_toml.exists():
         import re
-        match = re.search(r'sha256\s*=\s*"(\w+)"', jre_toml.read_text())
+        content = jre_toml.read_text()
+        match = re.search(r'sha256\s*=\s*"(\w+)"', content)
         if match: current_sha = match.group(1)
     if current_sha == info['sha256'] and jre_layer.exists():
         log_step("REUSE", f"JRE v{info['version']}")
@@ -109,15 +109,15 @@ def install_jre_fips(layers_dir, version, is_jdk_mode=False):
         convert_keystore(jre_layer, ks_dir, bc_dest)
     if version == "8":
         bc_dest = jre_layer / "lib/ext"
-        sec_dir = jre_layer / "lib/security"
+        sec_file = jre_layer / "lib/security/java.security"
         ks_dir = jre_layer / "lib/security"
     else:
         bc_dest = jre_layer / "lib"
-        sec_dir = jre_layer / "conf/security"
+        sec_file = jre_layer / "conf/security/java.security"
         ks_dir = jre_layer / "lib/security"
-    setup_env(jre_layer, bc_dest, ks_dir, sec_dir / "java.security")
+    setup_env(jre_layer, bc_dest, ks_dir, sec_file)
     launch_val = "false" if is_jdk_mode else "true"
-    jre_toml.write_text(f'launch = {launch_val}\nbuild = false\ncache = true\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"\nfips = "true"')
+    jre_toml.write_text(f'[types]\nlaunch = {launch_val}\nbuild = false\ncache = true\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"\nfips = "true"')
     log_step("READY", f"FIPS JRE {info['version']} configured.")
     return True
 

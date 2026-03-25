@@ -1,91 +1,80 @@
 #!/usr/bin/env python3
 import os
 import sys
-import re
+import json
+import hashlib
+import tarfile
 import shutil
+import platform
 import urllib.request
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent.parent
-sys.path.append(str(BASE_DIR / "scripts"))
-
-try:
-    import jdk
-    import jre
-except ImportError as e:
-    print(f"Error: Could not import modules: {e}")
-    sys.exit(1)
-
 G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m", "\033[0m", "\033[1m"
-TICK, BOX, ARROW = "✓", "❒", "↳"
 
-def log_header(title):
-    print(f"\n{BOLD}{C}===> {title}{RESET}")
+def log_step(action, detail=""):
+    print(f"     {BOLD}{'JDK':<10}{RESET} : {G if action in ['REUSE', 'READY'] else Y}{action:<10}{RESET} -> {detail}")
 
-def log_step(layer, action, detail=""):
-    color = G if action in ["REUSE", "READY", "SUCCESS"] else Y
-    print(f"     {BOLD}{layer:<10}{RESET} : {color}{action:<10}{RESET} -> {detail}")
+def verify_sha256(file_path, expected_sha):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest() == expected_sha
 
-def download_jma(target_dir: Path):
-    jma_url = "https://github.com/SAP-archive/java-memory-assistant/releases/download/0.5.0/java-memory-assistant-0.5.0.jar"
-    jma_jar = target_dir / "java-memory-assistant.jar"
-    if not jma_jar.exists():
-        log_step("JMA", "FETCH", "Downloading Assistant...")
-        urllib.request.urlretrieve(jma_url, jma_jar)
-    return jma_jar
+def get_latest_jdk_info(version):
+    arch = "x64" if platform.machine() in ["x86_64", "AMD64"] else "aarch64"
+    url = f"https://api.adoptium.net/v3/assets/latest/{version}/hotspot?os=linux&architecture={arch}&image_type=jdk&vendor=eclipse"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            asset = data[0]
+            return {
+                "url": asset['binary']['package']['link'],
+                "sha256": asset['binary']['package']['checksum'],
+                "version": asset['version']['openjdk_version']
+            }
+    except Exception:
+        return None
 
-def main():
-    if len(sys.argv) < 3: sys.exit(1)
-    layers_dir = Path(sys.argv[1])
-    plan_path = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("")
+def install_jdk(layers_dir, version, launch=False):
+    layers_dir = Path(layers_dir).resolve()
+    jdk_layer = layers_dir / "jdk"
+    jdk_toml = layers_dir / "jdk.toml"
+    info = get_latest_jdk_info(version)
+    if not info: return False
+    current_sha = ""
+    if jdk_toml.exists():
+        import re
+        content = jdk_toml.read_text()
+        match = re.search(r'sha256\s*=\s*"(\w+)"', content)
+        if match: current_sha = match.group(1)
+    if current_sha == info['sha256'] and jdk_layer.exists():
+        log_step("REUSE", f"v{info['version']}")
+    else:
+        log_step("DOWNLOAD", info['url'])
+        tar_path = Path("/tmp/jdk.tar.gz")
+        urllib.request.urlretrieve(info['url'], tar_path)
+        if not verify_sha256(tar_path, info['sha256']): return False
+        if jdk_layer.exists(): shutil.rmtree(jdk_layer)
+        jdk_layer.mkdir(parents=True)
+        with tarfile.open(tar_path) as tar:
+            for m in tar.getmembers():
+                if '/' in m.name:
+                    m.name = m.name.split('/', 1)[1]
+                    if m.name: tar.extract(m, path=jdk_layer)
+        if tar_path.exists(): os.remove(tar_path)
     
-    log_header("FIPS Java Buildpack v5.0 (Modular)")
-
-    version = "21"
-    if plan_path.exists():
-        match = re.search(r'version\s*=\s*"([0-9.]+)"', plan_path.read_text())
-        if match: version = match.group(1)
-
-    jvm_type = os.getenv("BP_JVM_TYPE", "JRE").upper()
-    is_jdk_mode = (jvm_type == "JDK")
-
-    if not jdk.install_jdk(layers_dir, version, launch=is_jdk_mode):
-        sys.exit(1)
-
-    if not is_jdk_mode:
-        if not jre.install_jre_fips(layers_dir, version, is_jdk_mode=False):
-            sys.exit(1)
-
-    runtime_layer = layers_dir / ("jdk" if is_jdk_mode else "jre")
-    env_launch_dir = runtime_layer / "env.launch"
-    
-    if env_launch_dir.exists():
-        if os.getenv("BP_JMA_ENABLED", "false").lower() == "true":
-            lib_path = runtime_layer / ("jre/lib" if (version == "8" and is_jdk_mode) else "lib")
-            lib_path.mkdir(parents=True, exist_ok=True)
-            jma_jar = download_jma(lib_path)
-            
-            jma_opts = f"-javaagent:{jma_jar.resolve()} -Djma.check_interval=5s -Djma.log_level=ERROR "
-            if version != "8":
-                jma_opts += "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED "
-            
-            with open(env_launch_dir / "JAVA_TOOL_OPTIONS.append", "a") as f:
-                f.write(f" {jma_opts}")
-            log_step("JMA", "READY", "Java Memory Assistant injected")
-
-    launch_toml = layers_dir / "launch.toml"
-    java_binary = (runtime_layer / "bin" / "java").resolve()
-    
-    launch_toml.write_text(f'''
-[[processes]]
-type = "web"
-command = "{java_binary}"
-args = ["-jar", "/workspace/app.jar"]
-working-dir = "/workspace"
-direct = true
-''')
-
-    print(f"\n{G}{BOLD}===> FIPS Java Buildpack successfully finished{RESET}\n")
-
-if __name__ == "__main__":
-    main()
+    launch_val = str(launch).lower()
+    jdk_toml.write_text(f'[types]\nbuild = true\ncache = true\nlaunch = {launch_val}\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"')
+    for phase in ["build", "launch"]:
+        if phase == "launch" and not launch: continue
+        env_dir = jdk_layer / f"env.{phase}"
+        env_dir.mkdir(exist_ok=True)
+        (env_dir / "JAVA_HOME").write_text(str(jdk_layer))
+        (env_dir / "PATH.prepend").write_text(str(jdk_layer / "bin"))
+        (env_dir / "PATH.delim").write_text(":")
+        (env_dir / "JAVA_TOOL_OPTIONS.append").write_text("-XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8")
+        (env_dir / "JAVA_TOOL_OPTIONS.delim").write_text(" ")
+    log_step("READY", f"JDK {info['version']} installed.")
+    return True
