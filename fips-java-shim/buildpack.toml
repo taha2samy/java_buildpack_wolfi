@@ -5,7 +5,9 @@ api = "0.8"
   id = "*"
 
 
+
 [metadata]
+
   [[metadata.configurations]]
     name = "BP_JVM_VERSION"
     description = "The Java version to install (8, 11, 17, 21, 25)"
@@ -32,8 +34,9 @@ api = "0.8"
 
 [buildpack]
 id = "taha/fips-java"
-version = "1.0.0"
+version = "1.0.1"
 name = "FIPS Java Shim"
+sbom-formats = ["application/vnd.cyclonedx+json"]
 
 
 [[targets]]

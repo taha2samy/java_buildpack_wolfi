@@ -18,7 +18,7 @@ tasks:
   run-maven:
     desc: Run the Maven application
     cmds:
-      - docker run -it --rm -m 512m {{.MAVEN_APP_IMG}}
+      - docker run -it --rm -p 8080:8080 -m 512m {{.MAVEN_APP_IMG}}
 
   build-gradle:
     desc: Build the Gradle application
@@ -28,10 +28,19 @@ tasks:
   run-gradle:
     desc: Run the Gradle application
     cmds:
-      - docker run -it --rm -m 512m {{.GRADLE_APP_IMG}}
+      - docker run -it --rm -p 8080:8080 -m 512m {{.GRADLE_APP_IMG}}
 
   build-all:
     desc: Build both Maven and Gradle apps
     cmds:
       - task: build-maven
       - task: build-gradle
+  sbom-maven:
+    desc: Download SBOM for Maven app
+    cmds:
+      - pack sbom download {{.MAVEN_APP_IMG}} --output-dir ./sbom-maven
+
+  sbom-gradle:
+    desc: Download SBOM for Gradle app
+    cmds:
+      - pack sbom download {{.GRADLE_APP_IMG}} --output-dir ./sbom-gradle

@@ -1,0 +1,49 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:{{ uuid }}",
+  "version": 1,
+  "metadata": {
+    "timestamp": "{{ timestamp }}",
+    "component": {
+      "group": "eclipse",
+      "name": "openjdk-jre-fips",
+      "version": "{{ version }}",
+      "type": "library"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "jre",
+      "version": "{{ version }}",
+      "hashes": [{ "alg": "SHA-256", "content": "{{ sha256 }}" }],
+      "purl": "pkg:generic/eclipse/jre@{{ version }}?arch={{ arch }}"
+    },
+    {
+      "type": "library",
+      "group": "org.bouncycastle",
+      "name": "bc-fips",
+      "version": "{{ bc_fips_ver }}",
+      "hashes": [{ "alg": "SHA-256", "content": "{{ bc_fips_sha }}" }],
+      "purl": "pkg:maven/org.bouncycastle/bc-fips@{{ bc_fips_ver }}",
+      "description": "Bouncy Castle FIPS Cryptographic Module"
+    },
+    {
+      "type": "library",
+      "group": "org.bouncycastle",
+      "name": "bcutil-fips",
+      "version": "{{ bc_util_ver }}",
+      "hashes": [{ "alg": "SHA-256", "content": "{{ bc_util_sha }}" }],
+      "purl": "pkg:maven/org.bouncycastle/bcutil-fips@{{ bc_util_ver }}"
+    },
+    {
+      "type": "library",
+      "group": "org.bouncycastle",
+      "name": "bctls-fips",
+      "version": "{{ bc_tls_ver }}",
+      "hashes": [{ "alg": "SHA-256", "content": "{{ bc_tls_sha }}" }],
+      "purl": "pkg:maven/org.bouncycastle/bctls-fips@{{ bc_tls_ver }}"
+    }
+  ]
+}

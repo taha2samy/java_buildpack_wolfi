@@ -12,7 +12,7 @@ description = "Custom Wolfi FIPS Builder"
   arch = "arm64"
 
 [[buildpacks]]
-  uri = "docker://taha/fips-java:1.0.0"
+  uri = "docker://taha/fips-java:1.0.1"
 
 [[buildpacks]]
   uri = "docker://paketobuildpacks/ca-certificates:latest"

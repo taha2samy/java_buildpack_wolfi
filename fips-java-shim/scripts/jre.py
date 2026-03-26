@@ -8,7 +8,10 @@ import shutil
 import platform
 import subprocess
 import urllib.request
+import uuid
+from datetime import datetime
 from pathlib import Path
+
 try:
     from jinja2 import Template
 except ImportError:
@@ -16,9 +19,6 @@ except ImportError:
 
 G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m", "\033[0m", "\033[1m"
 BP_ROOT = Path(__file__).parent.parent.resolve()
-
-def log_header(title):
-    print(f"\n{BOLD}{C}===> {title}{RESET}")
 
 def log_step(action, detail=""):
     color = G if action in ["REUSE", "READY", "SUCCESS", "VERIFIED"] else Y
@@ -43,7 +43,8 @@ def get_jre_info(version):
             return {
                 "url": asset['binary']['package']['link'],
                 "sha256": asset['binary']['package']['checksum'],
-                "version": asset['version']['openjdk_version']
+                "version": asset['version']['openjdk_version'],
+                "arch": arch
             }
     except Exception:
         return None
@@ -51,21 +52,39 @@ def get_jre_info(version):
 def download_file(url, target_path, expected_sha):
     if target_path.exists() and verify_sha256(target_path, expected_sha):
         return True
-    headers = {'User-Agent': 'Mozilla/5.0'}
     try:
-        req = urllib.request.Request(url, headers=headers)
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req) as response, open(target_path, 'wb') as f:
             f.write(response.read())
     except Exception:
         return False
     return verify_sha256(target_path, expected_sha)
 
+def generate_sbom(layers_dir, info, bc_config):
+    sbom_tpl_path = BP_ROOT / "templates" / "sbom.jre.json.j2"
+    if not sbom_tpl_path.exists():
+        return
+    template = Template(sbom_tpl_path.read_text())
+    sbom_content = template.render(
+        uuid=str(uuid.uuid4()),
+        timestamp=datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+        version=info['version'],
+        sha256=info['sha256'],
+        arch=info['arch'],
+        bc_fips_ver=bc_config['bouncycastle_fips_version'],
+        bc_fips_sha=bc_config['bouncycastle_fips_sha'],
+        bc_util_ver=bc_config['bouncycastle_util_fips_version'],
+        bc_util_sha=bc_config['bouncycastle_util_fips_sha'],
+        bc_tls_ver=bc_config['bouncycastle_tls_fips_version'],
+        bc_tls_sha=bc_config['bouncycastle_tls_fips_sha']
+    )
+    (layers_dir /"jre.sbom.cdx.json").write_text(sbom_content)
+    log_step("SBOM", "launch.sbom.jre.cdx.json generated")
+
 def install_jre_fips(layers_dir, version, is_jdk_mode=False):
     layers_dir = Path(layers_dir).resolve()
-    jre_layer = layers_dir / "jre"
-    jre_toml = layers_dir / "jre.toml"
-    config_path = BP_ROOT / "config" / "bouncycastle.json"
-    tpl_path = BP_ROOT / "templates" / "java.security.j2"
+    jre_layer, jre_toml = layers_dir / "jre", layers_dir / "jre.toml"
+    config_path, tpl_path = BP_ROOT / "config" / "bouncycastle.json", BP_ROOT / "templates" / "java.security.j2"
     with open(config_path, 'r') as f:
         bc_config = json.load(f)
     info = get_jre_info(version)
@@ -93,93 +112,60 @@ def install_jre_fips(layers_dir, version, is_jdk_mode=False):
                         tar.extract(m, path=jre_layer)
         if tar_path.exists():
             os.remove(tar_path)
-        if version == "8":
-            bc_dest = jre_layer / "lib/ext"
-            sec_dir = jre_layer / "lib/security"
-        else:
-            bc_dest = jre_layer / "lib"
-            sec_dir = jre_layer / "conf/security"
+        bc_dest, sec_dir = jre_layer / "lib", jre_layer / "conf/security"
         bc_dest.mkdir(parents=True, exist_ok=True)
         sec_dir.mkdir(parents=True, exist_ok=True)
         for key in ["fips", "util_fips", "tls_fips"]:
-            url = bc_config[f"bouncycastle_{key}_url"]
-            sha = bc_config[f"bouncycastle_{key}_sha"]
+            url, sha = bc_config[f"bouncycastle_{key}_url"], bc_config[f"bouncycastle_{key}_sha"]
             download_file(url, bc_dest / url.split('/')[-1], sha)
         template = Template(tpl_path.read_text())
         (sec_dir / "java.security").write_text(template.render(version=version))
         convert_keystore(jre_layer, jre_layer / "lib/security", bc_dest)
+        generate_sbom(layers_dir, info, bc_config)
     else:
         log_step("REUSE", f"v{info['version']}")
-    setup_env(
-        jre_layer,
-        bc_dest,
-        jre_layer / "lib/security",
-        sec_dir / "java.security" if version != "8" else jre_layer / "lib/security/java.security"
-    )
-    launch_val = "false" if is_jdk_mode else "true"
-    jre_toml.write_text(
-        f'[types]\nlaunch = {launch_val}\nbuild = false\ncache = true\n\n'
-        f'[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"'
-    )
+        generate_sbom(layers_dir, info, bc_config)
+    setup_env(jre_layer, jre_layer / "lib", jre_layer / "lib/security")
+    jre_toml.write_text(f'[types]\nlaunch = {"false" if is_jdk_mode else "true"}\nbuild = false\ncache = true\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"')
     return True
 
 def convert_keystore(jre_path, ks_dir, bc_dest):
-    cacerts = ks_dir / "cacerts"
-    backup = ks_dir / "cacerts.old"
-    temp = ks_dir / "cacerts.bcfks"
+    cacerts, backup, temp = ks_dir / "cacerts", ks_dir / "cacerts.old", ks_dir / "cacerts.bcfks"
     if not cacerts.exists() or backup.exists():
         return
     shutil.copy2(cacerts, backup)
     bc_fips = next(bc_dest.glob("bc-fips-*.jar"))
     bc_util = next(bc_dest.glob("bcutil-fips-*.jar"))
-    clean_env = os.environ.copy()
-    clean_env.pop("JAVA_TOOL_OPTIONS", None)
-    cmd = [
-        str(jre_path / "bin/keytool"),
-        "-importkeystore",
-        "-srckeystore", str(backup),
-        "-srcstorepass", "changeit",
-        "-srcstoretype", "PKCS12",
-        "-destkeystore", str(temp),
-        "-deststoretype", "BCFKS",
-        "-deststorepass", "changeit",
-        "-providerpath", f"{bc_fips}:{bc_util}",
-        "-provider", "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider",
-        "-noprompt"
-    ]
-    if subprocess.run(cmd, env=clean_env, stdout=subprocess.DEVNULL).returncode == 0:
+    cmd = [str(jre_path / "bin/keytool"), "-importkeystore", "-srckeystore", str(backup), "-srcstorepass", "changeit", "-srcstoretype", "PKCS12", "-destkeystore", str(temp), "-deststoretype", "BCFKS", "-deststorepass", "changeit", "-providerpath", f"{bc_fips}:{bc_util}", "-provider", "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider", "-noprompt"]
+    env = os.environ.copy()
+    env.pop("JAVA_TOOL_OPTIONS", None)
+    if subprocess.run(cmd, env=env, stdout=subprocess.DEVNULL).returncode == 0:
         shutil.move(str(temp), str(cacerts))
 
-def setup_env(jre_layer, bc_dest, ks_dir, sec_file):
+def setup_env(jre_layer, bc_dest, ks_dir):
     env_launch = jre_layer / "env.launch"
     env_launch.mkdir(exist_ok=True)
-    (env_launch / "JAVA_HOME").write_text(str(jre_layer))
-    (env_launch / "PATH.prepend").write_text(str(jre_layer / "bin"))
-    (env_launch / "PATH.delim").write_text(":")
+    with open(env_launch / "JAVA_HOME", "wb") as f:
+        f.write(str(jre_layer).encode('utf-8'))
+    with open(env_launch / "PATH.prepend", "wb") as f:
+        f.write(str(jre_layer / "bin").encode('utf-8'))
+    with open(env_launch / "PATH.delim", "wb") as f:
+        f.write(b":")
     bc_jars = []
     for prefix in ["bc-fips", "bcutil-fips", "bctls-fips"]:
         match = list(bc_dest.glob(f"{prefix}*.jar"))
         if match:
             bc_jars.append(str(match[0].resolve()))
     boot = ":".join(bc_jars)
-    fips_opts = (
-        f"-Dorg.bouncycastle.fips.approved_only=true "
-        f"-Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM "
-        f"-Dkeystore.type=BCFKS "
-        f"-Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts "
-        f"-Djavax.net.ssl.trustStoreType=BCFKS "
-        f"-Djavax.net.ssl.trustStorePassword=changeit "
-        f"-Xbootclasspath/a:{boot} "
-        f"-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75.0"
-    )
-    with open(env_launch / "JAVA_TOOL_OPTIONS.append", "wb") as f:
-        f.write(fips_opts.encode('utf-8'))
+    headroom = int(os.getenv("BPL_JVM_HEAD_ROOM", "25"))
+    ram_percentage = float(100 - headroom)
+    fips_opts = (f"-Dorg.bouncycastle.fips.approved_only=true -Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM -Dkeystore.type=BCFKS -Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts -Djavax.net.ssl.trustStoreType=BCFKS -Djavax.net.ssl.trustStorePassword=changeit -Xbootclasspath/a:{boot} -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:MaxRAMPercentage={ram_percentage}")
+    with open(env_launch / "JAVA_TOOL_OPTIONS.append", "ab") as f:
+        f.write(f" {fips_opts}".encode('utf-8'))
     with open(env_launch / "JAVA_TOOL_OPTIONS.delim", "wb") as f:
         f.write(b" ")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         sys.exit(1)
-    target_layers, java_ver = sys.argv[1], sys.argv[2]
-    jtype = sys.argv[3].lower() if len(sys.argv) > 3 else "jre"
-    install_jre_fips(target_layers, java_ver, (jtype == "jdk"))
+    install_jre_fips(sys.argv[1], sys.argv[2], (sys.argv[3].lower() == "jdk" if len(sys.argv) > 3 else False))

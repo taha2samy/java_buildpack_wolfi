@@ -1,0 +1,43 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:{{ uuid }}",
+  "version": 1,
+  "metadata": {
+    "timestamp": "{{ timestamp }}",
+    "tools": [
+      {
+        "vendor": "Taha",
+        "name": "FIPS Java Buildpack",
+        "version": "1.0.0"
+      }
+    ],
+    "component": {
+      "group": "eclipse",
+      "name": "openjdk",
+      "version": "{{ version }}",
+      "type": "library",
+      "description": "Eclipse Adoptium OpenJDK"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "jdk",
+      "version": "{{ version }}",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "{{ sha256 }}"
+        }
+      ],
+      "purl": "pkg:generic/eclipse/openjdk@{{ version }}?arch={{ arch }}",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "{{ url }}"
+        }
+      ]
+    }
+  ]
+}
