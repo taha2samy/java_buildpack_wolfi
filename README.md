@@ -1,6 +1,5 @@
 # Hardened FIPS Java Buildpack
 
-## Overview
 This buildpack provides a highly secure Java Runtime Environment (JRE) designed for environments requiring FIPS 140-3 compliance. It integrates BouncyCastle FIPS cryptographic modules and enforces strict security policies while maintaining enterprise-grade observability and performance tuning.
 
 ## Target Audience
