@@ -14,6 +14,7 @@ This solution is intended for security-sensitive sectors, including:
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
+| `BP_JVM_TYPE`| JRE or JDK | --- |
 | `BP_JVM_VERSION` | java version | 21 |
 | `BPL_JVM_HEAD_ROOM` | Percentage of memory to leave as headroom for the OS (0-100). | `25` |
 | `BPL_JAVA_NMT_ENABLED` | Enables Native Memory Tracking (NMT). | `true` |
