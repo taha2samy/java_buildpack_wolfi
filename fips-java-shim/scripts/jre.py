@@ -145,26 +145,68 @@ def convert_keystore(jre_path, ks_dir, bc_dest):
 def setup_env(jre_layer, bc_dest, ks_dir):
     env_launch = jre_layer / "env.launch"
     env_launch.mkdir(exist_ok=True)
+    
     with open(env_launch / "JAVA_HOME", "wb") as f:
         f.write(str(jre_layer).encode('utf-8'))
     with open(env_launch / "PATH.prepend", "wb") as f:
         f.write(str(jre_layer / "bin").encode('utf-8'))
     with open(env_launch / "PATH.delim", "wb") as f:
         f.write(b":")
+    with open(env_launch / "MALLOC_ARENA_MAX", "wb") as f:
+        f.write(b"2")
+        
     bc_jars = []
     for prefix in ["bc-fips", "bcutil-fips", "bctls-fips"]:
         match = list(bc_dest.glob(f"{prefix}*.jar"))
         if match:
             bc_jars.append(str(match[0].resolve()))
     boot = ":".join(bc_jars)
+    
     headroom = int(os.getenv("BPL_JVM_HEAD_ROOM", "25"))
     ram_percentage = float(100 - headroom)
-    fips_opts = (f"-Dorg.bouncycastle.fips.approved_only=true -Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM -Dkeystore.type=BCFKS -Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts -Djavax.net.ssl.trustStoreType=BCFKS -Djavax.net.ssl.trustStorePassword=changeit -Xbootclasspath/a:{boot} -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:MaxRAMPercentage={ram_percentage}")
+    
+    fips_opts = (f"-Dorg.bouncycastle.fips.approved_only=true "
+                 f"-Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM "
+                 f"-Dkeystore.type=BCFKS "
+                 f"-Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts "
+                 f"-Djavax.net.ssl.trustStoreType=BCFKS "
+                 f"-Djavax.net.ssl.trustStorePassword=changeit "
+                 f"-Xbootclasspath/a:{boot} "
+                 f"-XX:+ExitOnOutOfMemoryError "
+                 f"-XX:+UseContainerSupport "
+                 f"-XX:MaxRAMPercentage={ram_percentage} "
+                 f"-Dfile.encoding=UTF-8 "
+                 f"-Dsun.net.inetaddr.ttl=60 "
+                 f"-XX:+UnlockExperimentalVMOptions")
+
+    if os.getenv("BPL_JAVA_NMT_ENABLED", "true").lower() == "true":
+        nmt_level = os.getenv("BPL_JAVA_NMT_LEVEL", "summary")
+        fips_opts += f" -XX:NativeMemoryTracking={nmt_level} -XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics"
+
+    if os.getenv("BPL_JMX_ENABLED", "false").lower() == "true":
+        jmx_port = os.getenv("BPL_JMX_PORT", "5000")
+        fips_opts += (f" -Djava.rmi.server.hostname=127.0.0.1 "
+                      f"-Dcom.sun.management.jmxremote.authenticate=false "
+                      f"-Dcom.sun.management.jmxremote.ssl=false "
+                      f"-Dcom.sun.management.jmxremote.rmi.port={jmx_port}")
+
+    if os.getenv("BPL_DEBUG_ENABLED", "false").lower() == "true":
+        debug_port = os.getenv("BPL_DEBUG_PORT", "8000")
+        suspend = "y" if os.getenv("BPL_DEBUG_SUSPEND", "false").lower() == "true" else "n"
+        fips_opts += f" -agentlib:jdwp=transport=dt_socket,server=y,address=*:{debug_port},suspend={suspend}"
+
+    if os.getenv("BPL_JFR_ENABLED", "false").lower() == "true":
+        jfr_args = os.getenv("BPL_JFR_ARGS", "dumponexit=true,filename=/tmp/recording.jfr")
+        fips_opts += f" -XX:StartFlightRecording={jfr_args}"
+
+    heap_dump_path = os.getenv("BPL_HEAP_DUMP_PATH")
+    if heap_dump_path:
+        fips_opts += f" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath={heap_dump_path}"
+
     with open(env_launch / "JAVA_TOOL_OPTIONS.append", "ab") as f:
         f.write(f" {fips_opts}".encode('utf-8'))
     with open(env_launch / "JAVA_TOOL_OPTIONS.delim", "wb") as f:
         f.write(b" ")
-
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         sys.exit(1)
