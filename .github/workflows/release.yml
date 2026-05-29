@@ -34,28 +34,29 @@ jobs:
         run: |
           sed -i 's|ghcr.io/taha2samy|localhost:5001|g' ./2-builder/builder.toml
 
-      - id: build-base
-        uses: docker/build-push-action@v5
-        with:
-          context: ./build-image
-          file: ./build-image/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ env.REGISTRY }}/java_fck_fips_builder:latest
+      # - id: build-base
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./build-image
+      #     file: ./build-image/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: ${{ env.REGISTRY }}/java_fck_fips_builder:latest
 
-      - id: run-base
-        uses: docker/build-push-action@v5
-        with:
-          context: ./run-image
-          file: ./run-image/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ env.REGISTRY }}/java_fck_fips_running:latest
+      # - id: run-base
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./run-image
+      #     file: ./run-image/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: ${{ env.REGISTRY }}/java_fck_fips_running:latest
 
       - name: Package Buildpack
         run: |
           pack buildpack package ${{ env.REGISTRY }}/fips-java:1.0.1 \
-            --config ./package.toml \
+            --path ./fips-java-shim \
+            --format image \
             --target linux/amd64 \
             --target linux/arm64 \
             --publish
