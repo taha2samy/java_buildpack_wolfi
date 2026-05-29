@@ -41,27 +41,27 @@ jobs:
         env:
           OWNER: '${{ github.repository_owner }}'
 
-      # - id: build-base
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: ./build-image
-      #     file: ./build-image/Dockerfile
-      #     platforms: linux/amd64,linux/arm64
-      #     push: true
-      #     provenance: false
-      #     sbom: false
-      #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
+      - id: build-base
+        uses: docker/build-push-action@v5
+        with:
+          context: ./build-image
+          file: ./build-image/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
 
-      # - id: run-base
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: ./run-image
-      #     file: ./run-image/Dockerfile
-      #     platforms: linux/amd64,linux/arm64
-      #     push: true
-      #     provenance: false
-      #     sbom: false
-      #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
+      - id: run-base
+        uses: docker/build-push-action@v5
+        with:
+          context: ./run-image
+          file: ./run-image/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
 
       - name: Package FIPS Java Buildpack
         run: |
