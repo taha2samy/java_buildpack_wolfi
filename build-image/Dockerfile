@@ -22,7 +22,7 @@ ENV CNB_GROUP_ID=1001
 RUN groupadd -g ${CNB_GROUP_ID} cnb && \
     useradd -u ${CNB_USER_ID} -g ${CNB_GROUP_ID} -s /bin/bash -m cnb
 
-LABEL io.buildpacks.stack.id="io.fckfips.stacks.wolfi""
+LABEL io.buildpacks.stack.id="io.fckfips.stacks.wolfi"
 
 RUN mkdir -p /tmp && chmod 1777 /tmp
 
