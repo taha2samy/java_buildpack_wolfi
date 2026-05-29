@@ -63,14 +63,14 @@ jobs:
       #     sbom: false
       #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
 
-      # - name: Package FIPS Java Buildpack
-      #   run: |
-      #     pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
-      #       --path ./fips-java-shim \
-      #       --format image \
-      #       --target linux/amd64 \
-      #       --target linux/arm64 \
-      #       --publish
+      - name: Package FIPS Java Buildpack
+        run: |
+          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
+            --path ./fips-java-shim \
+            --format image \
+            --target linux/amd64 \
+            --target linux/arm64 \
+            --publish
 
       - name: Pre-create Builder Package on GHCR
         run: |
