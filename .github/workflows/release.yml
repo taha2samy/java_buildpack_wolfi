@@ -6,11 +6,9 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write
-  attestations: write
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: localhost:5001
 
 jobs:
   build-and-publish:
@@ -20,25 +18,21 @@ jobs:
 
       - uses: docker/setup-qemu-action@v3
 
-      - uses: docker/setup-buildx-action@v4
+      - name: Start local registry
+        run: |
+          docker run -d -p 5001:5001 --name registry registry:2
 
-      - name: Install Crane
-        uses: imjasonh/setup-crane@v0.4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: network=host
 
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.12.3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - run: |
-          echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
-        env:
-          OWNER: '${{ github.repository_owner }}'
+      - name: Prepare Builder Config for Local Registry
+        run: |
+          sed -i 's|ghcr.io/taha2samy|localhost:5001|g' ./2-builder/builder.toml
 
       - id: build-base
         uses: docker/build-push-action@v5
@@ -47,7 +41,7 @@ jobs:
           file: ./build-image/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
+          tags: ${{ env.REGISTRY }}/java_fck_fips_builder:latest
 
       - id: run-base
         uses: docker/build-push-action@v5
@@ -56,76 +50,20 @@ jobs:
           file: ./run-image/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
+          tags: ${{ env.REGISTRY }}/java_fck_fips_running:latest
 
       - name: Package Buildpack
         run: |
-          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
-            --path ./fips-java-shim \
-            --format image \
+          pack buildpack package ${{ env.REGISTRY }}/fips-java:1.0.1 \
+            --config ./package.toml \
             --target linux/amd64 \
             --target linux/arm64 \
             --publish
 
       - name: Create Builder
         run: |
-          pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest \
+          pack builder create ${{ env.REGISTRY }}/java-fips-builder:latest \
             --config ./2-builder/builder.toml \
             --target linux/amd64 \
             --target linux/arm64 \
             --publish
-
-      - id: resolve-digests
-        run: |
-          echo "bp_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1)" >> $GITHUB_OUTPUT
-          echo "builder_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest)" >> $GITHUB_OUTPUT
-
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder
-          subject-digest: ${{ steps.build-base.outputs.digest }}
-          push-to-registry: true
-          show-summary: false
-
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running
-          subject-digest: ${{ steps.run-base.outputs.digest }}
-          push-to-registry: true
-          show-summary: false
-
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java
-          subject-digest: ${{ steps.resolve-digests.outputs.bp_digest }}
-          push-to-registry: true
-          show-summary: false
-
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder
-          subject-digest: ${{ steps.resolve-digests.outputs.builder_digest }}
-          push-to-registry: true
-          show-summary: false
-
-  cleanup-ghcr-images:
-    needs: [build-and-publish]
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        package_name:
-          - java_fck_fips_builder
-          - java_fck_fips_running
-          - fips-java
-          - java-fips-builder
-    steps:
-      - uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          package: ${{ matrix.package_name }}
-          older-than: 1 hour
-          delete-untagged: true
-          keep-n-tagged: 0
