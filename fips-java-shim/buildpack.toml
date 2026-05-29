@@ -1,13 +1,6 @@
 api = "0.10"
 
-
-[[stacks]]
-  id = "*"
-
-
-
 [metadata]
-
   [[metadata.configurations]]
     name = "BP_JVM_VERSION"
     description = "The Java version to install (8, 11, 17, 21, 25)"
@@ -33,23 +26,21 @@ api = "0.10"
     launch = true
 
 [buildpack]
-id = "taha/fips-java"
-version = "1.0.1"
-name = "FIPS Java Shim"
-sbom-formats = ["application/vnd.cyclonedx+json"]
-
-
-[[targets]]
-os = "linux"
-arch = "amd64"
+  id = "taha/fips-java"
+  version = "1.0.1"
+  name = "FIPS Java Shim"
+  sbom-formats = ["application/vnd.cyclonedx+json"]
 
 [[targets]]
-os = "linux"
-arch = "arm64"
+  os = "linux"
+  arch = "amd64"
 
+[[targets]]
+  os = "linux"
+  arch = "arm64"
 
 [[provides]]
-name = "jdk"
+  name = "jdk"
 
 [[provides]]
-name = "jre"
+  name = "jre"
