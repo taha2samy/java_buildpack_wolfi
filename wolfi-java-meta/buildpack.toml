@@ -2,65 +2,85 @@ api = "0.10"
 
 [buildpack]
   id = "fckfips/java"
-  name = "fips Buildpack for Java"
+  name = "fips Paketo Buildpack for Java"
   version = "1.0.0"
 
 [[order]]
   [[order.group]]
     id = "paketo-buildpacks/ca-certificates"
     optional = true
+    version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
+    version = "1.0.1"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
+    version = "2.33.1"
   [[order.group]]
     id = "paketo-buildpacks/maven"
+    version = "6.22.8"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
     optional = true
+    version = "6.15.3"
   [[order.group]]
     id = "paketo-buildpacks/spring-boot"
     optional = true
+    version = "5.36.3"
 
 [[order]]
   [[order.group]]
     id = "paketo-buildpacks/ca-certificates"
     optional = true
+    version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
+    version = "1.0.1"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
+    version = "2.33.1"
   [[order.group]]
     id = "paketo-buildpacks/gradle"
+    version = "8.5.2"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
     optional = true
+    version = "6.15.3"
   [[order.group]]
     id = "paketo-buildpacks/spring-boot"
     optional = true
+    version = "5.36.3"
 
 [[order]]
   [[order.group]]
     id = "paketo-buildpacks/ca-certificates"
     optional = true
+    version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
+    version = "1.0.1"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
+    version = "2.33.1"
   [[order.group]]
     id = "paketo-buildpacks/sbt"
+    version = "6.22.10"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
     optional = true
+    version = "6.15.3"
 
 [[order]]
   [[order.group]]
     id = "paketo-buildpacks/ca-certificates"
     optional = true
+    version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
+    version = "1.0.1"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
+    version = "6.15.3"
