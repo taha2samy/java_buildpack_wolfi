@@ -41,45 +41,45 @@ jobs:
         env:
           OWNER: '${{ github.repository_owner }}'
 
-      - id: build-base
-        uses: docker/build-push-action@v5
-        with:
-          context: ./build-image
-          file: ./build-image/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          provenance: false
-          sbom: false
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
+      # - id: build-base
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./build-image
+      #     file: ./build-image/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     provenance: false
+      #     sbom: false
+      #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
 
-      - id: run-base
-        uses: docker/build-push-action@v5
-        with:
-          context: ./run-image
-          file: ./run-image/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          provenance: false
-          sbom: false
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
+      # - id: run-base
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./run-image
+      #     file: ./run-image/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     provenance: false
+      #     sbom: false
+      #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
 
-      - name: Package FIPS Java Buildpack
-        run: |
-          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.0 \
-            --path ./fips-java-shim \
-            --format image \
-            --target linux/amd64 \
-            --target linux/arm64 \
-            --publish
+      # - name: Package FIPS Java Buildpack
+      #   run: |
+      #     pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.0 \
+      #       --path ./fips-java-shim \
+      #       --format image \
+      #       --target linux/amd64 \
+      #       --target linux/arm64 \
+      #       --publish
 
 
-      - name: Package Composite Meta Buildpack
-        run: |
-          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-meta:1.0.0 \
-            --config ./wolfi-java-meta/package.toml \
-            --target linux/amd64 \
-            --target linux/arm64 \
-            --publish
+      # - name: Package Composite Meta Buildpack
+      #   run: |
+      #     pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-meta:1.0.0 \
+      #       --config ./wolfi-java-meta/package.toml \
+      #       --target linux/amd64 \
+      #       --target linux/arm64 \
+      #       --publish
   build-builder:
     needs: build-and-publish
     runs-on: ubuntu-latest
@@ -105,6 +105,9 @@ jobs:
           for i in {1..5}; do
             pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fckfips-builder:1.0.0 \
               --config ./2-builder/builder.toml \
+              --target linux/amd64 \
+              --target linux/arm64 \
+              --append-image-name-suffix \
               --publish && break || {
                 echo "Builder creation failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
                 sleep 15
