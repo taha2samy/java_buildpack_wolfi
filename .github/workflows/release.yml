@@ -44,7 +44,6 @@ jobs:
         env:
           OWNER: '${{ github.repository_owner }}'
 
-      # تم تصحيح المسارات هنا (حذف java_buildpack_wolfi-main)
       - name: Build Build-Base
         id: build-base
         uses: docker/build-push-action@v5
@@ -55,7 +54,6 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
 
-      # تم تصحيح المسارات هنا
       - name: Build Run-Base
         id: run-base
         uses: docker/build-push-action@v5
@@ -66,21 +64,24 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
 
-      # تم تصحيح المسار (--path) هنا
       - name: Package and Publish FIPS Java Buildpack
         run: |
           pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
             --path ./fips-java-shim \
             --target linux/amd64 \
             --target linux/arm64 \
-            --publish
+            --publish \
+            --pull-policy always
 
-      # تم تصحيح المسار (--config) هنا
+      - name: Wait for Registry Indexing
+        run: sleep 10
+
       - name: Create and Publish Custom Builder
         run: |
           pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest \
             --config ./2-builder/builder.toml \
-            --publish
+            --publish \
+            --pull-policy always
 
       - name: Resolve Image Digests
         id: resolve-digests
