@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: taha2samy
+  BUILD_IMAGE_NAME: java_fck_fips_builder
+  RUN_IMAGE_NAME: java_fck_fips_running
+  BP_NAME: fips-java
+  BP_VERSION: "1.0.1"
+  BUILDER_NAME: java-fips-builder
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./java_buildpack_wolfi-main/build-image
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.BUILD_IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./java_buildpack_wolfi-main/run-image
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.RUN_IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: buildpacks/github-actions/setup-pack@v2.1.1
+
+      - run: |
+          docker rmi ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.BP_NAME }}:${{ env.BP_VERSION }} || true
+          docker rmi ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.BUILDER_NAME }}:latest || true
+
+      - run: |
+          pack buildpack package \
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.BP_NAME }}:${{ env.BP_VERSION }} \
+            --path ./java_buildpack_wolfi-main/fips-java-shim \
+            --format image \
+            --publish
+
+      - run: |
+          pack builder create \
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.BUILDER_NAME }}:latest \
+            --config ./java_buildpack_wolfi-main/2-builder/builder.toml \
+            --publish
+
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.BUILD_IMAGE_NAME }}
+          package-type: 'container'
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: 'true'
+
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.RUN_IMAGE_NAME }}
+          package-type: 'container'
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: 'true'
+
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.BP_NAME }}
+          package-type: 'container'
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: 'true'
+
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.BUILDER_NAME }}
+          package-type: 'container'
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: 'true'
