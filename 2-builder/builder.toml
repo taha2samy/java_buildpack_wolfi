@@ -3,6 +3,10 @@ description = "Wolfi FIPS Builder"
   id = "taha/wolfi-build-image" 
   build-image = "ghcr.io/taha2samy/java_fck_fips_builder:latest"
   run-image = "ghcr.io/taha2samy/java_fck_fips_running:latest"
+
+[lifecycle]
+  version = "0.20.4"
+
  
 [[targets]]
   os = "linux"
