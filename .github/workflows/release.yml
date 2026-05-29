@@ -88,10 +88,15 @@ jobs:
 
       - name: Create Builder
         run: |
-          pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest \
-            --config ./2-builder/builder.toml \
-            --publish \
-            --verbose
+          for i in {1..5}; do
+            pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-meta:1.0.0 \
+              --config ./wolfi-java-meta/package.toml \
+              --publish && break || {
+                echo "Composite package failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
+                sleep 15
+              }
+          done
+
 
 
   #     - id: resolve-digests
