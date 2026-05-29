@@ -1,8 +1,8 @@
-description = "Custom Wolfi FIPS Builder"
+description = "Wolfi FIPS Builder"
 [stack]
   id = "taha/wolfi-build-image" 
-  build-image = "taha/wolfi-build-image:latest"
-  run-image = "taha/wolfi-run-image:latest"
+  build-image = "ghcr.io/taha2samy/java_fck_fips_builder:latest"
+  run-image = "ghcr.io/taha2samy/java_fck_fips_running:latest"
  
 [[targets]]
   os = "linux"
@@ -12,7 +12,7 @@ description = "Custom Wolfi FIPS Builder"
   arch = "arm64"
 
 [[buildpacks]]
-  uri = "docker://taha/fips-java:1.0.1"
+  uri = "ghcr.io/taha2samy/fips-java:1.0.1"
 
 [[buildpacks]]
   uri = "docker://paketobuildpacks/ca-certificates:latest"
