@@ -44,108 +44,104 @@ jobs:
         env:
           OWNER: '${{ github.repository_owner }}'
 
-      - name: Build Build-Base
-        id: build-base
-        uses: docker/build-push-action@v5
-        with:
-          context: ./build-image
-          file: ./build-image/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
+      # - name: Build Build-Base
+      #   id: build-base
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./build-image
+      #     file: ./build-image/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
 
-      - name: Build Run-Base
-        id: run-base
-        uses: docker/build-push-action@v5
-        with:
-          context: ./run-image
-          file: ./run-image/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
+      # - name: Build Run-Base
+      #   id: run-base
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./run-image
+      #     file: ./run-image/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
       
       - name: Package and Publish FIPS Java Buildpack
         run: |
           pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
             --path ./fips-java-shim \
-            --target linux/amd64 \
-            --target linux/arm64 \
-            --publish \
-            --pull-policy always
 
-      - name: Wait for Registry Indexing
-        run: |
-         sleep 10 && docker system prune -a --volumes -f && rm -rf ~/.pack/
+  #     - name: Wait for Registry Indexing
+  #       run: |
+  #        sleep 10 && docker system prune -a --volumes -f && rm -rf ~/.pack/
 
 
-      - name: Create Multi-arch Builder 
-        run: |
-          pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-fck-builder:1.0.0 \
-            --config ./2-builder/builder.toml \
-            --target linux/amd64 \
-            --target linux/arm64 \
-            --pull-policy always \
-            --publish \
+  #     - name: Create Multi-arch Builder 
+  #       run: |
+  #         pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-fck-builder:1.0.0 \
+  #           --config ./2-builder/builder.toml \
+  #           --target linux/amd64 \
+  #           --target linux/arm64 \
+  #           --pull-policy always \
+  #           --publish \
 
 
 
-      - name: Resolve Image Digests
-        id: resolve-digests
-        run: |
-          echo "bp_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1)" >> $GITHUB_OUTPUT
-          echo "builder_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest)" >> $GITHUB_OUTPUT
+  #     - name: Resolve Image Digests
+  #       id: resolve-digests
+  #       run: |
+  #         echo "bp_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1)" >> $GITHUB_OUTPUT
+  #         echo "builder_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest)" >> $GITHUB_OUTPUT
 
-      - name: Attest Build Base Image
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder
-          subject-digest: ${{ steps.build-base.outputs.digest }}
-          push-to-registry: true
-          show-summary: false
+  #     - name: Attest Build Base Image
+  #       uses: actions/attest-build-provenance@v2
+  #       with:
+  #         subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder
+  #         subject-digest: ${{ steps.build-base.outputs.digest }}
+  #         push-to-registry: true
+  #         show-summary: false
 
-      - name: Attest Run Base Image
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running
-          subject-digest: ${{ steps.run-base.outputs.digest }}
-          push-to-registry: true
-          show-summary: false
+  #     - name: Attest Run Base Image
+  #       uses: actions/attest-build-provenance@v2
+  #       with:
+  #         subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running
+  #         subject-digest: ${{ steps.run-base.outputs.digest }}
+  #         push-to-registry: true
+  #         show-summary: false
 
-      - name: Attest FIPS Java Buildpack
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java
-          subject-digest: ${{ steps.resolve-digests.outputs.bp_digest }}
-          push-to-registry: true
-          show-summary: false
+  #     - name: Attest FIPS Java Buildpack
+  #       uses: actions/attest-build-provenance@v2
+  #       with:
+  #         subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java
+  #         subject-digest: ${{ steps.resolve-digests.outputs.bp_digest }}
+  #         push-to-registry: true
+  #         show-summary: false
 
-      - name: Attest Custom Builder Image
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder
-          subject-digest: ${{ steps.resolve-digests.outputs.builder_digest }}
-          push-to-registry: true
-          show-summary: false
+  #     - name: Attest Custom Builder Image
+  #       uses: actions/attest-build-provenance@v2
+  #       with:
+  #         subject-name: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder
+  #         subject-digest: ${{ steps.resolve-digests.outputs.builder_digest }}
+  #         push-to-registry: true
+  #         show-summary: false
 
-  cleanup-ghcr-images:
-    needs: [build-and-publish]
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        package_name:
-          - java_fck_fips_builder
-          - java_fck_fips_running
-          - fips-java
-          - java-fips-builder
-    steps:
-      - name: Cleanup Untagged Images
-        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          package: ${{ matrix.package_name }}
-          older-than: 1 hour
-          delete-untagged: true
-          keep-n-tagged: 0
+  # cleanup-ghcr-images:
+  #   needs: [build-and-publish]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     packages: write
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       package_name:
+  #         - java_fck_fips_builder
+  #         - java_fck_fips_running
+  #         - fips-java
+  #         - java-fips-builder
+  #   steps:
+  #     - name: Cleanup Untagged Images
+  #       uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         package: ${{ matrix.package_name }}
+  #         older-than: 1 hour
+  #         delete-untagged: true
+  #         keep-n-tagged: 0
