@@ -1,0 +1,66 @@
+api = "0.10"
+
+[buildpack]
+  id = "fckfips/java"
+  name = "fips Buildpack for Java"
+  version = "1.0.0"
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/maven"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/gradle"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/syft"
+    optional = true
+  [[order.group]]
+    id = "paketo-buildpacks/sbt"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
+    optional = true
+
+[[order]]
+  [[order.group]]
+    id = "paketo-buildpacks/ca-certificates"
+    optional = true
+  [[order.group]]
+    id = "taha/fips-java"
+  [[order.group]]
+    id = "paketo-buildpacks/executable-jar"
