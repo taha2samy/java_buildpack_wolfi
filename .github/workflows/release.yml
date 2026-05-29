@@ -8,7 +8,7 @@ permissions:
   packages: write
 
 env:
-  REGISTRY: localhost:5001
+  REGISTRY: 127.0.0.1:5001
 
 jobs:
   build-and-publish:
