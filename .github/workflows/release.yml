@@ -86,7 +86,9 @@ jobs:
             --config ./2-builder/builder.toml \
             --target linux/amd64 \
             --target linux/arm64 \
-            --publish
+            --publish \
+            --verbose
+
 
       - id: resolve-digests
         run: |
