@@ -1,0 +1,64 @@
+[buildpack]
+  uri = "."
+
+[[dependencies]]
+  uri = "docker://ghcr.io/taha2samy/fips-java:1.0.1"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/ca-certificates:3.12.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/syft:2.33.1"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/gradle:8.5.2"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/maven:6.22.8"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/sbt:6.22.10"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/executable-jar:6.15.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/spring-boot:5.36.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/apache-tomcat:8.9.8"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/dist-zip:5.12.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/procfile:5.13.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/jattach:1.12.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/azure-application-insights:6.2.4"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/google-stackdriver:10.2.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/datadog:6.10.1"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/java-memory-assistant:1.10.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/environment-variables:4.11.3"
+
+[[dependencies]]
+  uri = "docker://docker.io/paketobuildpacks/image-labels:4.12.3"
+
+[[targets]]
+  arch = "amd64"
+  os = "linux"
+
+[[targets]]
+  arch = "arm64"
+  os = "linux"
