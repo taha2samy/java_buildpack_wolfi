@@ -72,11 +72,6 @@ jobs:
             --target linux/arm64 \
             --publish
 
-      - name: Pre-create Builder Package on GHCR
-        run: |
-          docker pull busybox:latest
-          docker tag busybox:latest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest
-          docker push ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest
 
       - name: Package Composite Meta Buildpack
         run: |
