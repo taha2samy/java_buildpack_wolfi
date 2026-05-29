@@ -103,7 +103,7 @@ jobs:
       - name: Create Builder
         run: |
           for i in {1..5}; do
-            pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fckfips-builder:1.0.0 \
+            pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fckfips-builder-stack:1.0.0 \
               --config ./2-builder/builder.toml \
               --target linux/amd64 \
               --publish  && break || {
