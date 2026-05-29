@@ -1,9 +1,10 @@
 version: '3'
 
 vars:
-  BP_NAME: taha/fips-java
+  BP_NAME: ghcr.io/taha2samy/fips-java
   BP_VERSION: 1.0.1
-  BP_PATH: ./fips-java-shim
+  BP_PATH: "./fips-java-shim"
+
 
 tasks:
   package:
