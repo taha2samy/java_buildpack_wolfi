@@ -35,7 +35,7 @@ ENV CNB_USER_ID=1001
 ENV CNB_GROUP_ID=1001
 ENV LANG=C.UTF-8 TZ=UTC
 
-LABEL io.buildpacks.stack.id="taha/wolfi-build-image"
+LABEL io.buildpacks.stack.id="io.fckfips.stacks.wolfi"
 
 USER 1001
 WORKDIR /home/java
