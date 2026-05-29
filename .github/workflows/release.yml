@@ -20,7 +20,8 @@ jobs:
 
       - uses: docker/setup-qemu-action@v3
 
-      - uses: docker/setup-buildx-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Install Crane
         uses: imjasonh/setup-crane@v0.4
@@ -47,6 +48,8 @@ jobs:
           file: ./build-image/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          provenance: false
+          sbom: false
           tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_builder:latest
 
       - id: run-base
@@ -56,6 +59,8 @@ jobs:
           file: ./run-image/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          provenance: false
+          sbom: false
           tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
 
       - name: Package FIPS Java Buildpack
