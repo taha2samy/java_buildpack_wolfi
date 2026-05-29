@@ -68,6 +68,8 @@ jobs:
         run: |
           pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
             --path ./fips-java-shim \
+              --target linux/amd64 \
+              --target linux/arm64 \
 
   #     - name: Wait for Registry Indexing
   #       run: |
