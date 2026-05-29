@@ -12,7 +12,7 @@ api = "0.10"
     version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
-    version = "1.0.1"
+    version = "1.0.2"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
