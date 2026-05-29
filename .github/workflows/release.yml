@@ -107,13 +107,12 @@ jobs:
               --config ./2-builder/builder.toml \
               --target linux/amd64 \
               --target linux/arm64 \
-              --append-image-name-suffix \
-              --publish && break || {
+              --append-image-name-suffix  && break || {
                 echo "Builder creation failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
                 sleep 15
               }
           done
-
+          docker image ls
 
 
   #     - id: resolve-digests
