@@ -85,7 +85,6 @@ jobs:
             --target linux/amd64 \
             --target linux/arm64 \
             --publish \
-            --pull-policy always
 
 
 
