@@ -106,7 +106,6 @@ jobs:
             pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fckfips-builder:1.0.0 \
               --config ./2-builder/builder.toml \
               --target linux/amd64 \
-              --target linux/arm64 \
               --append-image-name-suffix  && break || {
                 echo "Builder creation failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
                 sleep 15
