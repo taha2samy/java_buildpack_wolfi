@@ -11,9 +11,9 @@ includes:
 
 
 vars:
-  BUILD_IMAGE: taha/wolfi-build-image:latest
-  RUN_IMAGE: taha/wolfi-run-image:latest
-  BUILDER_NAME: taha/wolfi-fips-builder:latest
+  BUILD_IMAGE: ghcr.io/taha2samy/java_fck_fips_builder:latest
+  RUN_IMAGE: ghcr.io/taha2samy/java_fck_fips_running:latest
+  BUILDER_NAME: ghcr.io/taha2samy/java-fips-builder:latest
   BUILDER_CONFIG: 2-builder/builder.toml
 
 tasks:
