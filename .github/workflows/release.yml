@@ -65,7 +65,7 @@ jobs:
 
       - name: Package FIPS Java Buildpack
         run: |
-          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
+          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.2 \
             --path ./fips-java-shim \
             --format image \
             --target linux/amd64 \
@@ -84,10 +84,10 @@ jobs:
       - name: Create Builder
         run: |
           for i in {1..5}; do
-            pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-meta:1.0.0 \
-              --config ./wolfi-java-meta/package.toml \
+            pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest \
+              --config ./2-builder/builder.toml \
               --publish && break || {
-                echo "Composite package failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
+                echo "Builder creation failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
                 sleep 15
               }
           done
