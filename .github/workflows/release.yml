@@ -110,3 +110,18 @@ jobs:
     permissions:
       packages: write
     strategy:
+      fail-fast: false
+      matrix:
+        package_name:
+          - java_fck_fips_builder
+          - java_fck_fips_running
+          - fips-java
+          - java-fips-builder
+    steps:
+      - uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          package: ${{ matrix.package_name }}
+          older-than: 1 hour
+          delete-untagged: true
+          keep-n-tagged: 0
