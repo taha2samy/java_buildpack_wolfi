@@ -74,37 +74,18 @@ jobs:
             --pull-policy always
 
       - name: Wait for Registry Indexing
-        run: sleep 10
-
-
-
-
-      - name: Start local Docker registry
-        run: docker run -d -p 5000:5000 --name registry registry:2
-
-      - name: Create Multi-arch Builder locally
         run: |
-          pack builder create localhost:5000/java-fips-builder:latest \
+         sleep 10 && docker system prune -a --volumes -f && rm -rf ~/.pack/
+
+
+      - name: Create Multi-arch Builder 
+        run: |
+          pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-fck-builder:1.0.0 \
             --config ./2-builder/builder.toml \
+            --target linux/amd64 \
+            --target linux/arm64 \
             --publish \
             --pull-policy always
-
-      - name: Push Multi-arch Builder to GHCR
-        run: |
-          crane copy localhost:5000/java-fips-builder:latest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:1.0.0
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
