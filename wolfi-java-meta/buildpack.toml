@@ -12,7 +12,7 @@ api = "0.10"
     version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
-    version = "1.0.2"
+    version = "1.0.0"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
@@ -76,7 +76,7 @@ api = "0.10"
     version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
-    version = "1.0.1"
+    version = "1.0.0"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
@@ -140,7 +140,7 @@ api = "0.10"
     version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
-    version = "1.0.1"
+    version = "1.0.0"
   [[order.group]]
     id = "paketo-buildpacks/syft"
     optional = true
@@ -164,7 +164,7 @@ api = "0.10"
     version = "3.12.3"
   [[order.group]]
     id = "taha/fips-java"
-    version = "1.0.1"
+    version = "1.0.0"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
     version = "6.15.3"

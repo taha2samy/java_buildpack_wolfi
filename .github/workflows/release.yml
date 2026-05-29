@@ -65,7 +65,7 @@ jobs:
 
       - name: Package FIPS Java Buildpack
         run: |
-          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.2 \
+          pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.0 \
             --path ./fips-java-shim \
             --format image \
             --target linux/amd64 \
@@ -96,7 +96,7 @@ jobs:
 
   #     - id: resolve-digests
   #       run: |
-  #         echo "bp_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1)" >> $GITHUB_OUTPUT
+  #         echo "bp_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.0)" >> $GITHUB_OUTPUT
   #         echo "meta_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-meta:1.0.0)" >> $GITHUB_OUTPUT
   #         echo "builder_digest=$(crane digest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest)" >> $GITHUB_OUTPUT
 
