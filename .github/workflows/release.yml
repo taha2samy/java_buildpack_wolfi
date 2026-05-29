@@ -63,7 +63,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java_fck_fips_running:latest
-
+      
       - name: Package and Publish FIPS Java Buildpack
         run: |
           pack buildpack package ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/fips-java:1.0.1 \
@@ -76,12 +76,37 @@ jobs:
       - name: Wait for Registry Indexing
         run: sleep 10
 
-      - name: Create and Publish Custom Builder
+
+
+
+      - name: Start local Docker registry
+        run: docker run -d -p 5000:5000 --name registry registry:2
+
+      - name: Create Multi-arch Builder locally
         run: |
-          pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest \
+          pack builder create localhost:5000/java-fips-builder:latest \
             --config ./2-builder/builder.toml \
             --publish \
             --pull-policy always
+
+      - name: Push Multi-arch Builder to GHCR
+        run: |
+          crane copy localhost:5000/java-fips-builder:latest ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:1.0.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       - name: Resolve Image Digests
         id: resolve-digests
