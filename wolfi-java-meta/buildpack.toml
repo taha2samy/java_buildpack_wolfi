@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
   id = "fckfips/java"
-  name = "fips Paketo Buildpack for Java"
+  name = "Custom Paketo Buildpack for Java"
   version = "1.0.0"
 
 [[order]]
@@ -28,6 +28,46 @@ api = "0.10"
     id = "paketo-buildpacks/spring-boot"
     optional = true
     version = "5.36.3"
+  [[order.group]]
+    id = "paketo-buildpacks/apache-tomcat"
+    optional = true
+    version = "8.9.8"
+  [[order.group]]
+    id = "paketo-buildpacks/dist-zip"
+    optional = true
+    version = "5.12.3"
+  [[order.group]]
+    id = "paketo-buildpacks/procfile"
+    optional = true
+    version = "5.13.3"
+  [[order.group]]
+    id = "paketo-buildpacks/jattach"
+    optional = true
+    version = "1.12.3"
+  [[order.group]]
+    id = "paketo-buildpacks/azure-application-insights"
+    optional = true
+    version = "6.2.4"
+  [[order.group]]
+    id = "paketo-buildpacks/google-stackdriver"
+    optional = true
+    version = "10.2.3"
+  [[order.group]]
+    id = "paketo-buildpacks/datadog"
+    optional = true
+    version = "6.10.1"
+  [[order.group]]
+    id = "paketo-buildpacks/java-memory-assistant"
+    optional = true
+    version = "1.10.3"
+  [[order.group]]
+    id = "paketo-buildpacks/environment-variables"
+    optional = true
+    version = "4.11.3"
+  [[order.group]]
+    id = "paketo-buildpacks/image-labels"
+    optional = true
+    version = "4.12.3"
 
 [[order]]
   [[order.group]]
@@ -52,6 +92,46 @@ api = "0.10"
     id = "paketo-buildpacks/spring-boot"
     optional = true
     version = "5.36.3"
+  [[order.group]]
+    id = "paketo-buildpacks/apache-tomcat"
+    optional = true
+    version = "8.9.8"
+  [[order.group]]
+    id = "paketo-buildpacks/dist-zip"
+    optional = true
+    version = "5.12.3"
+  [[order.group]]
+    id = "paketo-buildpacks/procfile"
+    optional = true
+    version = "5.13.3"
+  [[order.group]]
+    id = "paketo-buildpacks/jattach"
+    optional = true
+    version = "1.12.3"
+  [[order.group]]
+    id = "paketo-buildpacks/azure-application-insights"
+    optional = true
+    version = "6.2.4"
+  [[order.group]]
+    id = "paketo-buildpacks/google-stackdriver"
+    optional = true
+    version = "10.2.3"
+  [[order.group]]
+    id = "paketo-buildpacks/datadog"
+    optional = true
+    version = "6.10.1"
+  [[order.group]]
+    id = "paketo-buildpacks/java-memory-assistant"
+    optional = true
+    version = "1.10.3"
+  [[order.group]]
+    id = "paketo-buildpacks/environment-variables"
+    optional = true
+    version = "4.11.3"
+  [[order.group]]
+    id = "paketo-buildpacks/image-labels"
+    optional = true
+    version = "4.12.3"
 
 [[order]]
   [[order.group]]
@@ -72,6 +152,10 @@ api = "0.10"
     id = "paketo-buildpacks/executable-jar"
     optional = true
     version = "6.15.3"
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+    version = "5.36.3"
 
 [[order]]
   [[order.group]]
@@ -84,3 +168,27 @@ api = "0.10"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
     version = "6.15.3"
+  [[order.group]]
+    id = "paketo-buildpacks/spring-boot"
+    optional = true
+    version = "5.36.3"
+  [[order.group]]
+    id = "paketo-buildpacks/jattach"
+    optional = true
+    version = "1.12.3"
+  [[order.group]]
+    id = "paketo-buildpacks/java-memory-assistant"
+    optional = true
+    version = "1.10.3"
+  [[order.group]]
+    id = "paketo-buildpacks/datadog"
+    optional = true
+    version = "6.10.1"
+  [[order.group]]
+    id = "paketo-buildpacks/azure-application-insights"
+    optional = true
+    version = "6.2.4"
+  [[order.group]]
+    id = "paketo-buildpacks/google-stackdriver"
+    optional = true
+    version = "10.2.3"
