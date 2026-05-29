@@ -20,7 +20,7 @@ jobs:
 
       - name: Start local registry
         run: |
-          docker run -d -p 5001:5001 --name registry registry:2
+          docker run -d -p 5001:5001 --name registry registry:2 && sleep 60 && docker container ls
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
