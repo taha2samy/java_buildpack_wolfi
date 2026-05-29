@@ -17,7 +17,7 @@ description = "Wolfi FIPS Java Builder"
   arch = "arm64"
 
 [[buildpacks]]
-  uri = "docker://ghcr.io/taha2samy/java-meta:1.0.0"
+  uri = "docker://ghcr.io/taha2samy/java-fips-meta:1.0.0"
 
 [[order]]
   [[order.group]]
