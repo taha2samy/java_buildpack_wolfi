@@ -1,17 +1,17 @@
-description = "Wolfi FIPS Builder"
+description = "Wolfi FIPS Java Builder"
+
 [stack]
-  id = "taha/wolfi-build-image" 
+  id = "taha/wolfi-build-image"
   build-image = "ghcr.io/taha2samy/java_fck_fips_builder:latest"
   run-image = "ghcr.io/taha2samy/java_fck_fips_running:latest"
 
-  
 [lifecycle]
   version = "0.19.0"
 
- 
 [[targets]]
   os = "linux"
   arch = "amd64"
+
 [[targets]]
   os = "linux"
   arch = "arm64"
@@ -20,55 +20,55 @@ description = "Wolfi FIPS Builder"
   uri = "docker://ghcr.io/taha2samy/fips-java:1.0.1"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/ca-certificates:latest"
+  uri = "docker://docker.io/paketobuildpacks/ca-certificates:3.12.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/syft:latest"
+  uri = "docker://docker.io/paketobuildpacks/syft:2.33.1"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/environment-variables:latest"
+  uri = "docker://docker.io/paketobuildpacks/gradle:8.5.2"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/image-labels:latest"
+  uri = "docker://docker.io/paketobuildpacks/maven:6.22.8"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/procfile:latest"
+  uri = "docker://docker.io/paketobuildpacks/sbt:6.22.10"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/jattach:latest"
+  uri = "docker://docker.io/paketobuildpacks/executable-jar:6.15.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/java-memory-assistant:latest"
+  uri = "docker://docker.io/paketobuildpacks/spring-boot:5.36.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/datadog:latest"
+  uri = "docker://docker.io/paketobuildpacks/apache-tomcat:8.9.8"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/azure-application-insights:latest"
+  uri = "docker://docker.io/paketobuildpacks/dist-zip:5.12.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/google-stackdriver:latest"
+  uri = "docker://docker.io/paketobuildpacks/procfile:5.13.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/maven:latest"
+  uri = "docker://docker.io/paketobuildpacks/jattach:1.12.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/gradle:latest"
+  uri = "docker://docker.io/paketobuildpacks/azure-application-insights:6.2.4"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/sbt:latest"
+  uri = "docker://docker.io/paketobuildpacks/google-stackdriver:10.2.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/executable-jar:latest"
+  uri = "docker://docker.io/paketobuildpacks/datadog:6.10.1"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/spring-boot:latest"
+  uri = "docker://docker.io/paketobuildpacks/java-memory-assistant:1.10.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/apache-tomcat:latest"
+  uri = "docker://docker.io/paketobuildpacks/environment-variables:4.11.3"
 
 [[buildpacks]]
-  uri = "docker://paketobuildpacks/dist-zip:latest"
+  uri = "docker://docker.io/paketobuildpacks/image-labels:4.12.3"
 
 [[order]]
   [[order.group]]
@@ -86,36 +86,6 @@ description = "Wolfi FIPS Builder"
     optional = true
   [[order.group]]
     id = "paketo-buildpacks/spring-boot"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/apache-tomcat"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/dist-zip"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/procfile"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/jattach"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/azure-application-insights"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/google-stackdriver"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/datadog"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/java-memory-assistant"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/environment-variables"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/image-labels"
     optional = true
 
 [[order]]
@@ -135,36 +105,6 @@ description = "Wolfi FIPS Builder"
   [[order.group]]
     id = "paketo-buildpacks/spring-boot"
     optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/apache-tomcat"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/dist-zip"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/procfile"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/jattach"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/azure-application-insights"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/google-stackdriver"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/datadog"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/java-memory-assistant"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/environment-variables"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/image-labels"
-    optional = true
 
 [[order]]
   [[order.group]]
@@ -180,9 +120,6 @@ description = "Wolfi FIPS Builder"
   [[order.group]]
     id = "paketo-buildpacks/executable-jar"
     optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/spring-boot"
-    optional = true
 
 [[order]]
   [[order.group]]
@@ -191,25 +128,4 @@ description = "Wolfi FIPS Builder"
   [[order.group]]
     id = "taha/fips-java"
   [[order.group]]
-    id = "paketo-buildpacks/syft"
-    optional = true
-  [[order.group]]
     id = "paketo-buildpacks/executable-jar"
-  [[order.group]]
-    id = "paketo-buildpacks/spring-boot"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/jattach"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/java-memory-assistant"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/datadog"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/azure-application-insights"
-    optional = true
-  [[order.group]]
-    id = "paketo-buildpacks/google-stackdriver"
-    optional = true
