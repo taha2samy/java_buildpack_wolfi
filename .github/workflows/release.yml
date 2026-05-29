@@ -99,7 +99,7 @@ jobs:
       - name: Create Builder
         run: |
           for i in {1..5}; do
-            pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:1.0.0 \
+            pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fckfips-builder:1.0.0 \
               --config ./2-builder/builder.toml \
               --publish && break || {
                 echo "Builder creation failed due to GHCR lag, retrying in 15s... (Attempt $i/5)"
