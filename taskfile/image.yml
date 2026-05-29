@@ -2,19 +2,19 @@ version: '3'
 
 tasks:
   build-img:
-    desc: Build the Wolfi Build Image
+    desc: Build and push the Wolfi Build Image for both AMD64 and ARM64
     dir: build-image
     cmds:
-      - docker build -t {{.BUILD_IMAGE}} .
+      - docker buildx build --platform linux/amd64,linux/arm64 -t {{.BUILD_IMAGE}} --push .
 
   run-img:
-    desc: Build the Wolfi Run Image (Distroless)
+    desc: Build and push the Wolfi Run Image (Distroless) for both AMD64 and ARM64
     dir: run-image
     cmds:
-      - docker build -t {{.RUN_IMAGE}} .
+      - docker buildx build --platform linux/amd64,linux/arm64 -t {{.RUN_IMAGE}} --push .
 
   run-img-with-shell:
-    desc: Build the Wolfi Run Image (with shell for debugging)
+    desc: Build and push the Wolfi Run Image (with shell for debugging) for both AMD64 and ARM64
     dir: run-image
     cmds:
-      - docker build -t {{.RUN_IMAGE}}-shell -f Dockerfile.run .
+      - docker buildx build --platform linux/amd64,linux/arm64 -t {{.RUN_IMAGE}}-shell -f Dockerfile.run --push .

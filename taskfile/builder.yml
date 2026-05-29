@@ -2,9 +2,10 @@ version: '3'
 
 tasks:
   create:
-    desc: Create the final Cloud Native Builder
+    desc: Create and publish the final Cloud Native Builder
     cmds:
-      - pack builder create {{.BUILDER_NAME}} --config {{.BUILDER_CONFIG}}
+      - pack builder create {{.BUILDER_NAME}} --config {{.BUILDER_CONFIG}} --pull-policy if-not-present
+      - docker push {{.BUILDER_NAME}}
 
   inspect:
     desc: Inspect the final builder

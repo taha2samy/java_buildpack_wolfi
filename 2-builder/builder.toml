@@ -2,8 +2,8 @@ description = "Wolfi FIPS Java Builder"
 
 [stack]
   id = "io.fckfips.stacks.wolfi"
-  build-image = "ghcr.io/taha2samy/java_fck_fips_builder:latest"
-  run-image = "ghcr.io/taha2samy/java_fck_fips_running:latest"
+  build-image = "ghcr.io/taha2samy/java-build-base:latest"
+  run-image = "ghcr.io/taha2samy/java-run-base:latest"
 
 [lifecycle]
   version = "0.19.0"

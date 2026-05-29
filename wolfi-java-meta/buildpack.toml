@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
   id = "fckfips/java"
-  name = "Custom Paketo Buildpack for Java"
+  name = "Paketo Buildpack for Java"
   version = "1.0.0"
 
 [[order]]

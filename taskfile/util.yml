@@ -1,6 +1,11 @@
 version: '3'
 
 tasks:
+  login-ghcr:
+    desc: Log in to GitHub Container Registry (GHCR) using Docker CLI
+    cmds:
+      - echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
+
   inspect-any:
     desc: Show layers for a specific image (usage > task util:inspect-any IMG=name)
     vars:

@@ -39,15 +39,13 @@ def main():
 
 [[processes]]
 type = "check-java"
-command = "{java_bin}"
+command = ["{java_bin}"]
 args = ["-version"]
-direct = true
 
 [[processes]]
 type = "heap-info"
-command = "{java_bin}"
+command = ["{java_bin}"]
 args = ["-XshowSettings:vm", "-version"]
-direct = true
 """
     
     with open(launch_toml, "w") as f:

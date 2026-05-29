@@ -1,12 +1,11 @@
 version: '3'
 
 vars:
-  BUILDER: taha/wolfi-fips-builder:latest
-  MAVEN_APP_IMG: taha/maven-fips-app:latest
+  BUILDER: ghcr.io/taha2samy/java-fips-builder:latest
+  MAVEN_APP_IMG: ghcr.io/taha2samy/maven-fips-app:1.0.0
   MAVEN_PATH: 3-sample-app
-  GRADLE_APP_IMG: taha/gradle-fips-app:latest
+  GRADLE_APP_IMG: ghcr.io/taha2samy/gradle-fips-app:1.0.0
   GRADLE_PATH: 4-gradle-app
-  #  only for github codespace  Docker API 1.43
   LIFECYCLE_IMG: buildpacksio/lifecycle:0.17.2
 
 tasks:
@@ -35,6 +34,7 @@ tasks:
     cmds:
       - task: build-maven
       - task: build-gradle
+
   sbom-maven:
     desc: Download SBOM for Maven app
     cmds:

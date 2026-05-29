@@ -4,20 +4,25 @@ vars:
   BP_NAME: ghcr.io/taha2samy/fips-java
   BP_VERSION: 1.0.0
   BP_PATH: "./fips-java-shim"
-
+  COMPOSITE_NAME: ghcr.io/taha2samy/java-fips-meta
+  COMPOSITE_VERSION: 1.0.0
+  COMPOSITE_CONFIG: "./wolfi-java-meta/package.toml"
 
 tasks:
   package:
-    desc: Package the FIPS Java Buildpack as an OCI image
+    desc: Package the FIPS Java and Composite Buildpacks with dual architectures
     cmds:
-      - pack buildpack package {{.BP_NAME}}:{{.BP_VERSION}} --path {{.BP_PATH}} --format image
+      - pack buildpack package {{.BP_NAME}}:{{.BP_VERSION}} --path {{.BP_PATH}} --format image --publish
+      - pack buildpack package {{.COMPOSITE_NAME}}:{{.COMPOSITE_VERSION}} --config {{.COMPOSITE_CONFIG}} --target linux/amd64 --target linux/arm64 --publish
 
   inspect:
     desc: Inspect the packaged buildpack metadata
     cmds:
       - pack buildpack inspect {{.BP_NAME}}:{{.BP_VERSION}}
+      - pack buildpack inspect {{.COMPOSITE_NAME}}:{{.COMPOSITE_VERSION}}
 
   clean:
-    desc: Remove the local buildpack image
+    desc: Remove local buildpack images
     cmds:
       - docker rmi {{.BP_NAME}}:{{.BP_VERSION}} || true
+      - docker rmi {{.COMPOSITE_NAME}}:{{.COMPOSITE_VERSION}} || true

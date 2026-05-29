@@ -1,7 +1,9 @@
 version: '3'
+
 env:
   DOCKER_API_VERSION: "1.50"
   PACK_VOLUME_KEY: "taha-fips-cache-key"
+
 includes:
   img: taskfile/image.yml
   builder: taskfile/builder.yml
@@ -9,11 +11,11 @@ includes:
   util: taskfile/util.yml
   bp: taskfile/buildpack.yml
 
-
 vars:
-  BUILD_IMAGE: ghcr.io/taha2samy/java_fck_fips_builder:latest
-  RUN_IMAGE: ghcr.io/taha2samy/java_fck_fips_running:latest
-  BUILDER_NAME: ghcr.io/taha2samy/java-fips-builder:latest
+  REGISTRY: ghcr.io/taha2samy
+  BUILD_IMAGE: "{{.REGISTRY}}/java-build-base:latest"
+  RUN_IMAGE: "{{.REGISTRY}}/java-run-base:latest"
+  BUILDER_NAME: "{{.REGISTRY}}/java-fips-builder:latest"
   BUILDER_CONFIG: 2-builder/builder.toml
 
 tasks:
