@@ -30,10 +30,6 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.12.3
 
-      - name: Prepare Builder Config for Local Registry
-        run: |
-          sed -i 's|ghcr.io/taha2samy|localhost:5001|g' ./2-builder/builder.toml
-
       # - id: build-base
       #   uses: docker/build-push-action@v5
       #   with:
