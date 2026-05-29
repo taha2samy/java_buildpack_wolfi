@@ -90,8 +90,6 @@ jobs:
         run: |
           pack builder create ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/java-fips-builder:latest \
             --config ./2-builder/builder.toml \
-            --target linux/amd64 \
-            --target linux/arm64 \
             --publish \
             --verbose
 
