@@ -2,6 +2,7 @@
 
 This buildpack provides a highly secure Java Runtime Environment (JRE) designed for environments requiring FIPS 140-3 compliance. It integrates BouncyCastle FIPS cryptographic modules and enforces strict security policies while maintaining enterprise-grade observability and performance tuning.
 
+<img width="1016" height="553" alt="003c9d3592ba4abbbdea72058c6783f0" src="https://github.com/user-attachments/assets/a7e27c2b-fc2e-4193-8cc3-34d99da32896" />
 
 ## Supported Environment Variables
 
