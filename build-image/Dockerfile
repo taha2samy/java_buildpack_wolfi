@@ -14,7 +14,9 @@ RUN apk update && \
 RUN pip install --no-cache-dir \
     rich \
     jinja2 \
+    pyinstaller \
     --break-system-packages
+
 
 ENV CNB_USER_ID=1001
 ENV CNB_GROUP_ID=1001

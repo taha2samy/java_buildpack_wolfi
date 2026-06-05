@@ -2,6 +2,8 @@
 import os
 import sys
 from pathlib import Path
+import subprocess
+import shutil
 
 BASE_DIR = Path(__file__).parent.parent
 sys.path.append(str(BASE_DIR / "scripts"))
@@ -32,7 +34,24 @@ def main():
             sys.exit(1)
 
     runtime_layer_name = "jdk" if is_jdk_mode else "jre"
-    java_bin = str(layers_dir / runtime_layer_name / "bin" / "java")
+    active_layer_path = layers_dir / runtime_layer_name
+    
+    exec_d_path = active_layer_path / "exec.d"
+    exec_d_path.mkdir(parents=True, exist_ok=True)
+    
+    binary_dest = exec_d_path / "java-memory-calculator"
+    
+    if not binary_dest.exists():
+        calc_src = BASE_DIR / "bin" / "java-memory-calculator"
+        subprocess.run(["pyinstaller", "--onefile", str(calc_src)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        shutil.copy("dist/java-memory-calculator", str(binary_dest))
+        os.chmod(str(binary_dest), 0o755)
+        shutil.rmtree("build", ignore_errors=True)
+        shutil.rmtree("dist", ignore_errors=True)
+        for f in os.listdir("."):
+            if f.endswith(".spec"): os.remove(f)
+
+    java_bin = str(active_layer_path / "bin" / "java")
     launch_toml = layers_dir / "launch.toml"
     
     processes_content = f"""

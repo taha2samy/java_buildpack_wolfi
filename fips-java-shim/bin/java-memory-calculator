@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+def write_to_env(key, value):
+    toml_output = f'{key} = "{value}"\n'
+    try:
+        fd3 = os.fdopen(3, 'w')
+        fd3.write(toml_output)
+        fd3.close()
+    except OSError:
+        sys.stdout.write(toml_output)
+
+def get_memory_limit():
+    paths = [
+        "/sys/fs/cgroup/memory.max",
+        "/sys/fs/cgroup/memory/memory.limit_in_bytes"
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r') as f:
+                    content = f.read().strip()
+                    if content and content != "max":
+                        return int(content)
+            except:
+                pass
+    return None
+
+def main():
+    mb_available = None
+    env_limit = os.environ.get("MEMORY_AVAILABLE")
+    
+    if env_limit:
+        try:
+            mb_available = int(env_limit)
+        except ValueError:
+            pass
+            
+    if mb_available is None:
+        limit = get_memory_limit()
+        if limit:
+            mb_available = limit // (1024 * 1024)
+
+    if mb_available:
+        headroom_pct = int(os.environ.get("BPL_JVM_HEAD_ROOM", "25"))
+        heap_size_mb = int(mb_available * ((100 - headroom_pct) / 100.0))
+        
+        existing_opts = os.environ.get("JAVA_TOOL_OPTIONS", "")
+        
+        if "-Xmx" not in existing_opts:
+            opts = f"{existing_opts} -Xmx{heap_size_mb}m -Xms{heap_size_mb}m".strip()
+            write_to_env("JAVA_TOOL_OPTIONS", opts)
+
+if __name__ == "__main__":
+    main()

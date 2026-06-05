@@ -162,9 +162,6 @@ def setup_env(jre_layer, bc_dest, ks_dir):
             bc_jars.append(str(match[0].resolve()))
     boot = ":".join(bc_jars)
     
-    headroom = int(os.getenv("BPL_JVM_HEAD_ROOM", "25"))
-    ram_percentage = float(100 - headroom)
-    
     fips_opts = (f"-Dorg.bouncycastle.fips.approved_only=true "
                  f"-Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM "
                  f"-Dkeystore.type=BCFKS "
@@ -174,7 +171,6 @@ def setup_env(jre_layer, bc_dest, ks_dir):
                  f"-Xbootclasspath/a:{boot} "
                  f"-XX:+ExitOnOutOfMemoryError "
                  f"-XX:+UseContainerSupport "
-                 f"-XX:MaxRAMPercentage={ram_percentage} "
                  f"-Dfile.encoding=UTF-8 "
                  f"-Dsun.net.inetaddr.ttl=60 "
                  f"-XX:+UnlockExperimentalVMOptions")

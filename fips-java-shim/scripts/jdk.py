@@ -6,6 +6,7 @@ import hashlib
 import tarfile
 import shutil
 import platform
+import subprocess
 import urllib.request
 import uuid
 from datetime import datetime
@@ -20,7 +21,7 @@ G, Y, C, R, RESET, BOLD = "\033[0;32m", "\033[0;33m", "\033[0;36m", "\033[0;31m"
 BP_ROOT = Path(__file__).parent.parent.resolve()
 
 def log_step(action, detail=""):
-    print(f"     {BOLD}{'JDK':<10}{RESET} : {G if action in ['REUSE', 'READY', 'SUCCESS'] else Y}{action:<10}{RESET} -> {detail}")
+    print(f"     {BOLD}{'JDK-FIPS':<10}{RESET} : {G if action in ['REUSE', 'READY', 'SUCCESS', 'UPDATE'] else Y}{action:<10}{RESET} -> {detail}")
 
 def verify_sha256(file_path, expected_sha):
     sha256_hash = hashlib.sha256()
@@ -40,8 +41,19 @@ def get_latest_jdk_info(version):
             return {"url": asset['binary']['package']['link'], "sha256": asset['binary']['package']['checksum'], "version": asset['version']['openjdk_version'], "arch": arch}
     except Exception: return None
 
-def generate_sbom(layers_dir, info):
-    sbom_tpl_path = BP_ROOT / "templates" / "sbom.jdk.json.j2"
+def download_file(url, target_path, expected_sha):
+    if target_path.exists() and verify_sha256(target_path, expected_sha):
+        return True
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response, open(target_path, 'wb') as f:
+            f.write(response.read())
+    except Exception:
+        return False
+    return verify_sha256(target_path, expected_sha)
+
+def generate_sbom(layers_dir, info, bc_config):
+    sbom_tpl_path = BP_ROOT / "templates" / "sbom.jre.json.j2"
     if not sbom_tpl_path.exists(): return
     template = Template(sbom_tpl_path.read_text())
     sbom_content = template.render(
@@ -50,14 +62,35 @@ def generate_sbom(layers_dir, info):
         version=info['version'],
         sha256=info['sha256'],
         arch=info['arch'],
-        url=info['url']
+        bc_fips_ver=bc_config['bouncycastle_fips_version'],
+        bc_fips_sha=bc_config['bouncycastle_fips_sha'],
+        bc_util_ver=bc_config['bouncycastle_util_fips_version'],
+        bc_util_sha=bc_config['bouncycastle_util_fips_sha'],
+        bc_tls_ver=bc_config['bouncycastle_tls_fips_version'],
+        bc_tls_sha=bc_config['bouncycastle_tls_fips_sha']
     )
     (layers_dir / "launch.sbom.cdx.json").write_text(sbom_content)
     log_step("SBOM", "jdk.sbom.cdx.json generated")
 
+def convert_keystore(jre_path, ks_dir, bc_dest):
+    cacerts, backup, temp = ks_dir / "cacerts", ks_dir / "cacerts.old", ks_dir / "cacerts.bcfks"
+    if not cacerts.exists() or backup.exists():
+        return
+    shutil.copy2(cacerts, backup)
+    bc_fips = next(bc_dest.glob("bc-fips-*.jar"))
+    bc_util = next(bc_dest.glob("bcutil-fips-*.jar"))
+    cmd = [str(jre_path / "bin/keytool"), "-importkeystore", "-srckeystore", str(backup), "-srcstorepass", "changeit", "-srcstoretype", "PKCS12", "-destkeystore", str(temp), "-deststoretype", "BCFKS", "-deststorepass", "changeit", "-providerpath", f"{bc_fips}:{bc_util}", "-provider", "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider", "-noprompt"]
+    env = os.environ.copy()
+    env.pop("JAVA_TOOL_OPTIONS", None)
+    if subprocess.run(cmd, env=env, stdout=subprocess.DEVNULL).returncode == 0:
+        shutil.move(str(temp), str(cacerts))
+
 def install_jdk(layers_dir, version, launch=False):
     layers_dir = Path(layers_dir).resolve()
     jdk_layer, jdk_toml = layers_dir / "jdk", layers_dir / "jdk.toml"
+    config_path, tpl_path = BP_ROOT / "config" / "bouncycastle.json", BP_ROOT / "templates" / "java.security.j2"
+    with open(config_path, 'r') as f:
+        bc_config = json.load(f)
     info = get_latest_jdk_info(version)
     if not info: return False
     current_sha = ""
@@ -68,9 +101,9 @@ def install_jdk(layers_dir, version, launch=False):
     
     if current_sha == info['sha256'] and jdk_layer.exists():
         log_step("REUSE", f"v{info['version']}")
-        generate_sbom(layers_dir, info)
+        generate_sbom(layers_dir, info, bc_config)
     else:
-        log_step("DOWNLOAD", info['url'])
+        log_step("UPDATE", f"Hardening JDK {info['version']}")
         tar_path = Path("/tmp/jdk.tar.gz")
         urllib.request.urlretrieve(info['url'], tar_path)
         if not verify_sha256(tar_path, info['sha256']): return False
@@ -82,19 +115,27 @@ def install_jdk(layers_dir, version, launch=False):
                     m.name = m.name.split('/', 1)[1]
                     if m.name: tar.extract(m, path=jdk_layer)
         if tar_path.exists(): os.remove(tar_path)
-        generate_sbom(layers_dir, info)
+        
+        bc_dest = jdk_layer / "lib"
+        sec_dir = jdk_layer / "conf/security"
+        bc_dest.mkdir(parents=True, exist_ok=True)
+        sec_dir.mkdir(parents=True, exist_ok=True)
+        for key in ["fips", "util_fips", "tls_fips"]:
+            url, sha = bc_config[f"bouncycastle_{key}_url"], bc_config[f"bouncycastle_{key}_sha"]
+            download_file(url, bc_dest / url.split('/')[-1], sha)
+        
+        template = Template(tpl_path.read_text())
+        (sec_dir / "java.security").write_text(template.render(version=version))
+        convert_keystore(jdk_layer, jdk_layer / "lib/security", bc_dest)
+        generate_sbom(layers_dir, info, bc_config)
     
     jdk_toml.write_text(f'[types]\nbuild = true\ncache = true\nlaunch = {str(launch).lower()}\n\n[metadata]\nversion = "{info["version"]}"\nsha256 = "{info["sha256"]}"')
     
-    headroom = int(os.getenv("BPL_JVM_HEAD_ROOM", "25"))
-    ram_percentage = float(100 - headroom)
-    
-    memory_opts = (
-        f"-XX:+UseContainerSupport "
-        f"-XX:MaxRAMPercentage={ram_percentage} "
-        f"-XX:InitialRAMPercentage={ram_percentage}"
-    )
+    setup_env(jdk_layer, jdk_layer / "lib", jdk_layer / "lib/security", launch)
+    log_step("READY", f"JDK {info['version']} installed.")
+    return True
 
+def setup_env(jdk_layer, bc_dest, ks_dir, launch):
     for phase in ["build", "launch"]:
         if phase == "launch" and not launch: continue
         env_dir = jdk_layer / f"env.{phase}"
@@ -102,11 +143,57 @@ def install_jdk(layers_dir, version, launch=False):
         with open(env_dir / "JAVA_HOME", "wb") as f: f.write(str(jdk_layer).encode('utf-8'))
         with open(env_dir / "PATH.prepend", "wb") as f: f.write(str(jdk_layer / "bin").encode('utf-8'))
         with open(env_dir / "PATH.delim", "wb") as f: f.write(b":")
-        # Use 'ab' to append and match JRE logic
+        
+        if phase == "launch":
+            with open(env_dir / "MALLOC_ARENA_MAX", "wb") as f:
+                f.write(b"2")
+                
+        bc_jars = []
+        for prefix in ["bc-fips", "bcutil-fips", "bctls-fips"]:
+            match = list(bc_dest.glob(f"{prefix}*.jar"))
+            if match:
+                bc_jars.append(str(match[0].resolve()))
+        boot = ":".join(bc_jars)
+        
+        fips_opts = (f"-Dorg.bouncycastle.fips.approved_only=true "
+                     f"-Dorg.bouncycastle.crypto.fips.seeder=DEVURANDOM "
+                     f"-Dkeystore.type=BCFKS "
+                     f"-Djavax.net.ssl.trustStore={ks_dir.resolve()}/cacerts "
+                     f"-Djavax.net.ssl.trustStoreType=BCFKS "
+                     f"-Djavax.net.ssl.trustStorePassword=changeit "
+                     f"-Xbootclasspath/a:{boot} "
+                     f"-XX:+ExitOnOutOfMemoryError "
+                     f"-XX:+UseContainerSupport "
+                     f"-Dfile.encoding=UTF-8 "
+                     f"-Dsun.net.inetaddr.ttl=60 "
+                     f"-XX:+UnlockExperimentalVMOptions")
+
+        if phase == "launch":
+            if os.getenv("BPL_JAVA_NMT_ENABLED", "true").lower() == "true":
+                nmt_level = os.getenv("BPL_JAVA_NMT_LEVEL", "summary")
+                fips_opts += f" -XX:NativeMemoryTracking={nmt_level} -XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics"
+
+            if os.getenv("BPL_JMX_ENABLED", "false").lower() == "true":
+                jmx_port = os.getenv("BPL_JMX_PORT", "5000")
+                fips_opts += (f" -Djava.rmi.server.hostname=127.0.0.1 "
+                              f"-Dcom.sun.management.jmxremote.authenticate=false "
+                              f"-Dcom.sun.management.jmxremote.ssl=false "
+                              f"-Dcom.sun.management.jmxremote.rmi.port={jmx_port}")
+
+            if os.getenv("BPL_DEBUG_ENABLED", "false").lower() == "true":
+                debug_port = os.environ.get("BPL_DEBUG_PORT", "8000")
+                suspend = "y" if os.environ.get("BPL_DEBUG_SUSPEND", "false").lower() == "true" else "n"
+                fips_opts += f" -agentlib:jdwp=transport=dt_socket,server=y,address=*:{debug_port},suspend={suspend}"
+
+            if os.getenv("BPL_JFR_ENABLED", "false").lower() == "true":
+                jfr_args = os.getenv("BPL_JFR_ARGS", "dumponexit=true,filename=/tmp/recording.jfr")
+                fips_opts += f" -XX:StartFlightRecording={jfr_args}"
+
+            heap_dump_path = os.getenv("BPL_HEAP_DUMP_PATH")
+            if heap_dump_path:
+                fips_opts += f" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath={heap_dump_path}"
+
         with open(env_dir / "JAVA_TOOL_OPTIONS.append", "ab") as f:
-            f.write(f" -XX:+ExitOnOutOfMemoryError {memory_opts} -Dfile.encoding=UTF-8".encode('utf-8'))
+            f.write(f" {fips_opts}".encode('utf-8'))
         with open(env_dir / "JAVA_TOOL_OPTIONS.delim", "wb") as f:
             f.write(b" ")
-            
-    log_step("READY", f"JDK {info['version']} installed.")
-    return True

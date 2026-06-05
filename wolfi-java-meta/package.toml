@@ -2,7 +2,7 @@
   uri = "."
 
 [[dependencies]]
-  uri = "docker://ghcr.io/taha2samy/fips-java:1.0.0"
+  uri = "docker://ghcr.io/taha2samy/fips-java:1.0.1"
 [[dependencies]]
   uri = "docker://docker.io/paketobuildpacks/ca-certificates:3.12.3"
 
