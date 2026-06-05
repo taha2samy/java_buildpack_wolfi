@@ -43,7 +43,7 @@ def main():
     
     if not binary_dest.exists():
         calc_src = BASE_DIR / "bin" / "java-memory-calculator"
-        subprocess.run(["pyinstaller", "--onefile", str(calc_src)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["pyinstaller", "--onefile", str(calc_src)], check=True)
         shutil.copy("dist/java-memory-calculator", str(binary_dest))
         os.chmod(str(binary_dest), 0o755)
         shutil.rmtree("build", ignore_errors=True)

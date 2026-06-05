@@ -1,17 +1,18 @@
-FROM chainguard/wolfi-base@sha256:9925d3017788558fa8f27e8bb160b791e56202b60c91fbcc5c867de3175986c8 
+FROM chainguard/wolfi-base:latest
 
 USER root
-
-RUN apk update && \
-    apk add --no-cache \
+RUN apk add --no-cache \
     bash \
     gzip \
     curl \
     shadow \
     python3 \
-    py3-pip
-
-RUN pip install --no-cache-dir \
+    py3-pip \
+    posix-libc-utils \
+    build-base \
+    libffi-dev && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
     rich \
     jinja2 \
     pyinstaller \
